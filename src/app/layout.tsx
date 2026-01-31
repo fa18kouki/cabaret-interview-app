@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { TRPCProvider } from "@/lib/trpc-provider";
+import { DemoProvider } from "@/lib/demo-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "キャバクラ面接アプリ",
-  description: "キャストと店舗を効率的にマッチングする面接アプリ",
+  title: "キャバクラ面接アプリ (デモ)",
+  description: "キャストと店舗を効率的にマッチングする面接アプリ - デモモード",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TRPCProvider>{children}</TRPCProvider>
+        <DemoProvider>{children}</DemoProvider>
       </body>
     </html>
   );
