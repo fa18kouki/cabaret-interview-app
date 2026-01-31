@@ -1,0 +1,286 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== 認証関連 ====================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ==================== ユーザー ====================
+
+enum UserRole {
+  CAST
+  STORE
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  phone         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  phoneVerified DateTime? @map("phone_verified")
+  image         String?
+  role          UserRole  @default(CAST)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // 認証関連
+  accounts Account[]
+  sessions Session[]
+
+  // ロール別プロフィール
+  cast  Cast?
+  store Store?
+
+  // メッセージ送信者として
+  sentMessages Message[]
+
+  @@map("users")
+}
+
+// ==================== キャスト ====================
+
+enum CastRank {
+  UNRANKED
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+model Cast {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  nickname    String
+  age         Int
+  description String?  @db.Text
+  photos      String[] // S3 URLs
+
+  // 希望条件
+  desiredAreas  String[] @map("desired_areas")
+  desiredSalary Int?     @map("desired_salary")
+
+  // MUST/WANT条件
+  mustConditions Json? @map("must_conditions")
+  wantConditions Json? @map("want_conditions")
+
+  // ステータス
+  idVerified   Boolean  @default(false) @map("id_verified")
+  rank         CastRank @default(UNRANKED)
+  penaltyCount Int      @default(0) @map("penalty_count")
+  isSuspended  Boolean  @default(false) @map("is_suspended")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // リレーション
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches    Match[]
+  offers     Offer[]
+  interviews Interview[]
+
+  @@map("casts")
+}
+
+// ==================== 店舗 ====================
+
+model Store {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  name        String
+  area        String // エリア（六本木、銀座など）
+  address     String
+  description String?  @db.Text
+  photos      String[]
+
+  // 営業情報
+  businessHours String? @map("business_hours")
+  salarySystem  String? @map("salary_system")
+  benefits      String[]
+
+  // 求める条件
+  mustConditions Json? @map("must_conditions")
+  wantConditions Json? @map("want_conditions")
+
+  // ステータス
+  isVerified Boolean @default(false) @map("is_verified")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // リレーション
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches    Match[]
+  offers     Offer[]
+  interviews Interview[]
+
+  @@map("stores")
+}
+
+// ==================== マッチング ====================
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Match {
+  id      String      @id @default(cuid())
+  castId  String      @map("cast_id")
+  storeId String      @map("store_id")
+  status  MatchStatus @default(PENDING)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // リレーション
+  cast     Cast      @relation(fields: [castId], references: [id], onDelete: Cascade)
+  store    Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([castId, storeId])
+  @@map("matches")
+}
+
+// ==================== オファー ====================
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+model Offer {
+  id      String      @id @default(cuid())
+  storeId String      @map("store_id")
+  castId  String      @map("cast_id")
+  message String      @db.Text
+  status  OfferStatus @default(PENDING)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  expiresAt DateTime @map("expires_at")
+
+  // リレーション
+  store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  cast       Cast        @relation(fields: [castId], references: [id], onDelete: Cascade)
+  interviews Interview[]
+
+  @@map("offers")
+}
+
+// ==================== 面接 ====================
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+model Interview {
+  id          String          @id @default(cuid())
+  offerId     String          @map("offer_id")
+  castId      String          @map("cast_id")
+  storeId     String          @map("store_id")
+  scheduledAt DateTime        @map("scheduled_at")
+  status      InterviewStatus @default(SCHEDULED)
+  notes       String?         @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // リレーション
+  offer Offer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  cast  Cast  @relation(fields: [castId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("interviews")
+}
+
+// ==================== メッセージ ====================
+
+model Message {
+  id       String  @id @default(cuid())
+  matchId  String  @map("match_id")
+  senderId String  @map("sender_id")
+  content  String  @db.Text
+  isRead   Boolean @default(false) @map("is_read")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // リレーション
+  match  Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// ==================== ペナルティ記録 ====================
+
+enum PenaltyType {
+  NO_SHOW
+  INAPPROPRIATE_CONTENT
+  SPAM
+  OTHER
+}
+
+model Penalty {
+  id          String      @id @default(cuid())
+  userId      String      @map("user_id")
+  type        PenaltyType
+  reason      String?     @db.Text
+  interviewId String?     @map("interview_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("penalties")
+}
