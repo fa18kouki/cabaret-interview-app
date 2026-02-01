@@ -8,4 +8,10 @@
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
 | #6155 | 4:52 PM | 🔄 | Refactored login page to use SocialLoginButtons component | ~326 |
+
+### Feb 1, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #6545 | 8:19 PM | 🔵 | デモモードログインページUI | ~144 |
 </claude-mem-context>
