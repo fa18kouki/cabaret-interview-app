@@ -41,7 +41,7 @@ export function Hero() {
               <br />
               <span className="text-pink-500">はじめるなら</span>
               <br />
-              <span className="text-gray-900">Nightwork AI</span>
+              <span className="text-gray-900">LUMINA</span>
             </h1>
 
             {/* Subtitle */}
@@ -75,21 +75,21 @@ export function Hero() {
               {/* Main image */}
               <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                 <img
-                  src="https://placehold.co/480x270/fce7f3/f472b6?text=Nightwork+AI"
-                  alt="Nightwork AI - エレガントな雰囲気"
+                  src="/champagne-night-view.png"
+                  alt="LUMINA - エレガントな雰囲気"
                   className="w-full h-auto object-cover"
                 />
               </div>
 
               {/* Badge: 登録者数 No.1 */}
-              <div className="absolute -top-4 -right-4 md:top-0 md:right-0 rotate-3">
+              <div className="absolute top-0 right-0 sm:-top-4 sm:-right-4 md:top-0 md:right-0 rotate-3">
                 <div className="bg-pink-400 text-white px-4 py-3 rounded-2xl shadow-xl font-bold text-sm md:text-base">
                   登録者数 No.1
                 </div>
               </div>
 
               {/* Badge: マッチング実績 */}
-              <div className="absolute -bottom-4 -left-4 md:bottom-4 md:-left-8 -rotate-3">
+              <div className="absolute bottom-0 left-0 sm:-bottom-4 sm:-left-4 md:bottom-4 md:-left-8 -rotate-3">
                 <div className="bg-white px-4 py-3 rounded-2xl shadow-xl">
                   <p className="text-pink-500 font-bold text-xl md:text-2xl">
                     22万件+
