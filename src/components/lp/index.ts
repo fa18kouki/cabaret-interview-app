@@ -1,0 +1,10 @@
+export { SectionHeader } from "./SectionHeader";
+export { GradientButton } from "./GradientButton";
+export { Hero } from "./Hero";
+export { ServiceSteps } from "./ServiceSteps";
+export { AppFeatures } from "./AppFeatures";
+export { StoreShowcase } from "./StoreShowcase";
+export { UserVoices } from "./UserVoices";
+export { FAQ } from "./FAQ";
+export { CTA } from "./CTA";
+export { Footer } from "./Footer";
