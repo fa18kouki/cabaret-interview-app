@@ -1,15 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Bot, Store, MessageSquare, UserCircle } from "lucide-react";
 import { useDemoSession } from "@/lib/demo-session";
-import {
-  createMockCastProfile,
-  createMockOffersForCast,
-  createMockMatchesForCast,
-} from "@/lib/mock-data";
+import { createMockCastProfile, getMockStoresForSearch } from "@/lib/mock-data";
+import { QuickActionCard } from "@/components/cast/QuickActionCard";
+import { StoreCard } from "@/components/cast/StoreCard";
+
+// ローカル画像パス
+const STORE_IMAGES = [
+  "/service-scene-01.png",
+  "/service-scene-02.png",
+  "/service-scene-03.png",
+  "/service-scene-04.png",
+];
+
+const AVATAR_IMAGE = "/gold-dress-back.png";
 
 export default function CastDashboard() {
   const router = useRouter();
@@ -26,178 +34,87 @@ export default function CastDashboard() {
   if (!session || session.user.role !== "CAST") {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
       </div>
     );
   }
 
   // デモモード: モックデータを使用
   const profile = createMockCastProfile(session.user.id);
-  const pendingOffers = createMockOffersForCast(session.user.id).filter(
-    (o) => o.status === "PENDING"
-  );
-  const activeMatches = createMockMatchesForCast(session.user.id);
+  const recommendedStores = getMockStoresForSearch().slice(0, 4);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">
-          こんにちは、{profile.nickname}さん
-        </h1>
-        <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">
-          デモモード
-        </span>
+    <div className="space-y-6 pb-4">
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between pt-2">
+        <div>
+          <p className="text-sm text-(--text-sub)">今日も頑張ろう！</p>
+          <h1 className="text-2xl font-bold text-(--text-main)">
+            こんにちは、{profile.nickname}さん
+          </h1>
+        </div>
+        <div className="relative">
+          <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-(--primary)">
+            <Image
+              src={AVATAR_IMAGE}
+              alt="プロフィール"
+              width={44}
+              height={44}
+              className="object-cover"
+            />
+          </div>
+          {/* オンラインインジケーター */}
+          <div className="absolute top-0 right-0 w-3 h-3 bg-(--primary) rounded-full border-2 border-white" />
+        </div>
       </div>
 
-      {/* ステータスカード */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="py-4 text-center">
-            <p className="text-3xl font-bold text-pink-600">
-              {pendingOffers.length}
-            </p>
-            <p className="text-sm text-gray-600">新着オファー</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-4 text-center">
-            <p className="text-3xl font-bold text-blue-600">
-              {activeMatches.length}
-            </p>
-            <p className="text-sm text-gray-600">マッチング中</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-4 text-center">
-            <p className="text-3xl font-bold text-green-600">未</p>
-            <p className="text-sm text-gray-600">本人確認</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-4 text-center">
-            <p className="text-3xl font-bold text-purple-600">N</p>
-            <p className="text-sm text-gray-600">ランク</p>
-          </CardContent>
-        </Card>
+      {/* クイックアクション */}
+      <div className="grid grid-cols-2 gap-4">
+        <QuickActionCard
+          href="/ai-diagnosis"
+          label="AI診断"
+          icon={Bot}
+          variant="pink"
+        />
+        <QuickActionCard
+          href="/stores"
+          label="店舗検索"
+          icon={Store}
+          variant="blue"
+        />
+        <QuickActionCard
+          href="/matches"
+          label="メッセージ"
+          icon={MessageSquare}
+          variant="green"
+        />
+        <QuickActionCard
+          href="/profile"
+          label="マイページ"
+          icon={UserCircle}
+          variant="purple"
+        />
       </div>
 
-      {/* 新着オファー */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">新着オファー</h2>
-            <Link
-              href="/offers"
-              className="text-sm text-pink-600 hover:text-pink-700"
-            >
-              すべて見る →
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {pendingOffers.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
-              新着オファーはありません
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {pendingOffers.map((offer) => (
-                <li
-                  key={offer.id}
-                  className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">
-                      {offer.store.name}
-                    </p>
-                    <p className="text-sm text-gray-500">{offer.store.area}</p>
-                  </div>
-                  <Link
-                    href="/offers"
-                    className="text-sm text-pink-600 hover:text-pink-700"
-                  >
-                    詳細
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* マッチング中 */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">マッチング中の店舗</h2>
-            <Link
-              href="/matches"
-              className="text-sm text-pink-600 hover:text-pink-700"
-            >
-              すべて見る →
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {activeMatches.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
-              マッチング中の店舗はありません
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {activeMatches.map((match) => (
-                <li
-                  key={match.id}
-                  className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">
-                      {match.store.name}
-                    </p>
-                    <p className="text-sm text-gray-500">{match.store.area}</p>
-                  </div>
-                  <Link
-                    href={`/chat/${match.id}`}
-                    className="px-3 py-1.5 bg-pink-100 text-pink-700 rounded-lg text-sm font-medium hover:bg-pink-200 transition-colors"
-                  >
-                    チャット
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      {/* おすすめ店舗 */}
+      <section>
+        <h2 className="text-lg font-bold text-(--text-main) mb-4 px-1">
+          あなたにおすすめ
+        </h2>
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+          {recommendedStores.map((store, index) => (
+            <StoreCard
+              key={store.id}
+              id={store.id}
+              name={store.name}
+              area={`${store.area} 徒歩${Math.floor(Math.random() * 5) + 3}分`}
+              salary={`時給 ${store.hourlyRateMin.toLocaleString()}円〜`}
+              imageUrl={STORE_IMAGES[index % STORE_IMAGES.length]}
+              variant="vertical"
+            />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
