@@ -48,15 +48,13 @@ export function CastNav() {
       {/* ロゴ（デスクトップのみ） */}
       <div className="hidden md:block p-4 border-b border-gray-200">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-(--primary) rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">C</span>
-          </div>
-          <span className="font-semibold text-gray-900">キャストポータル</span>
+          <img src="/Favicon_16x16.png" alt="" className="w-8 h-8 rounded-lg object-contain" />
+          <span className="font-semibold text-gray-900">LUMINA</span>
         </Link>
       </div>
 
       {/* ナビゲーション項目 */}
-      <ul className="flex justify-around h-[85px] items-center pb-5 md:pb-0 md:h-auto md:flex-col md:p-2 md:space-y-1 md:flex-1">
+      <ul className="flex justify-around h-20 sm:h-[85px] items-center pb-5 md:pb-0 md:h-auto md:flex-col md:p-2 md:space-y-1 md:flex-1">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
