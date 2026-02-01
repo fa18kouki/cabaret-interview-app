@@ -46,20 +46,25 @@
 
 ```mermaid
 graph TD
-    subgraph 未認証ユーザー（ゲスト）
-        A[LPにアクセス] --> B[店舗一覧を閲覧];
-        B --> C[店舗詳細を閲覧];
-        C --> D{具体的な<br>アクションは？};
-    end
-
-    subgraph ログイン移行
-        D -- "仮面接"など<br>CTAクリック --> E[LINEログインを要求];
-        E --> F[LINE認証];
-    end
-
-    subgraph 認証済みユーザー（会員）
-        F --> G[パーソナライズLP<br>・おすすめ表示<br>・通知];
-        G --> H[会員機能利用<br>・オファー確認<br>・条件検索];
-        B -- ログイン済み --> G;
-    end
+    A[LPにアクセス] --> B[店舗一覧を閲覧]
+    B --> C[店舗詳細を閲覧]
+    C --> D{具体的なアクション?}
+    D -->|仮面接などCTAクリック| E[LINEログインを要求]
+    E --> F[LINE認証]
+    F --> G[パーソナライズLP]
+    G --> H[おすすめ表示・通知]
+    H --> I[会員機能利用]
+    I --> J[オファー確認・条件検索]
+    B -->|ログイン済み| G
+    
+    style A fill:#fff4e6
+    style B fill:#fff4e6
+    style C fill:#fff4e6
+    style D fill:#fff4e6
+    style E fill:#e3f2fd
+    style F fill:#e3f2fd
+    style G fill:#e8f5e9
+    style H fill:#e8f5e9
+    style I fill:#e8f5e9
+    style J fill:#e8f5e9
 ```
