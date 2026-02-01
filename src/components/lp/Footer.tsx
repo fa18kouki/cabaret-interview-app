@@ -8,7 +8,7 @@ const legalLinks = [
 
 const supportInfo = [
   { label: "苦情処理窓口" },
-  { label: "メール: support@nightwork-ai.jp" },
+  { label: "メール: support@lumina.jp" },
   { label: "届け出番号: 職業紹介 XX-XX-XXXXXX", small: true },
 ];
 
@@ -20,7 +20,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
           {/* Brand */}
           <div>
-            <h3 className="text-lg font-bold text-white mb-4">Nightwork AI</h3>
+            <h3 className="text-lg font-bold text-white mb-4">LUMINA</h3>
             <p className="text-sm">
               AIを活用した、新しい働き方マッチングサービス
             </p>
@@ -59,18 +59,31 @@ export function Footer() {
           </div>
         </div>
 
+        {/* 店長入口 */}
+        <div className="border-t border-gray-800 pt-8 mb-6">
+          <p className="text-center text-sm text-gray-400">
+            店長の方は
+            <Link
+              href="/store/login"
+              className="text-white hover:underline ml-1"
+            >
+              こちら
+            </Link>
+            からログイン
+          </p>
+        </div>
+
         {/* Divider */}
         <div className="border-t border-gray-800 pt-8">
           {/* Disclaimers */}
           <div className="text-center text-xs mb-6 space-y-1">
             <p>当サービスは職業紹介事業として適切に届出を行っております。</p>
             <p>18歳未満の方はご利用いただけません。</p>
-            <p className="text-gray-500">※ デモ用のサンプルサイトです</p>
           </div>
 
           {/* Copyright */}
           <p className="text-center text-sm">
-            © 2026 Nightwork AI. All rights reserved.
+            © 2026 LUMINA. All rights reserved.
           </p>
         </div>
       </div>

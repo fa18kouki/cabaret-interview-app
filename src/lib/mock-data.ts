@@ -215,3 +215,77 @@ export function getMockCastsForSearch() {
     isSearchable: true,
   }));
 }
+
+// 店長用: 最近の応募者（診断結果・ステータス付き）
+export type ApplicantStatus = "UNREAD" | "CONFIRMED" | "INTERVIEW_SCHEDULED";
+
+export function getMockRecentApplicants() {
+  const names = [
+    { name: "鈴木 愛理", age: 21 },
+    { name: "田中 美咲", age: 23 },
+    { name: "高橋 さくら", age: 20 },
+    { name: "伊藤 玲奈", age: 22 },
+    { name: "渡辺 結衣", age: 24 },
+  ];
+  const statuses: ApplicantStatus[] = [
+    "UNREAD",
+    "CONFIRMED",
+    "INTERVIEW_SCHEDULED",
+    "CONFIRMED",
+    "UNREAD",
+  ];
+  const matchRates = [85, 92, 78, 88, 75];
+  const baseDate = new Date();
+  return names.map((item, i) => ({
+    id: `applicant_${i + 1}`,
+    appliedAt: new Date(
+      baseDate.getTime() - (4 - i) * 24 * 60 * 60 * 1000 - (i % 2) * 60 * 60 * 1000
+    ),
+    name: item.name,
+    age: item.age,
+    matchRate: matchRates[i],
+    status: statuses[i],
+  }));
+}
+
+// 店長用: 今週の面接予定
+export type InterviewStatus = "CONFIRMED" | "PENDING";
+
+function addDays(d: Date, days: number) {
+  const out = new Date(d);
+  out.setDate(out.getDate() + days);
+  return out;
+}
+
+export function getMockUpcomingInterviews() {
+  const today = new Date();
+  return [
+    {
+      id: "int_1",
+      date: addDays(today, 0),
+      time: "14:00",
+      candidateName: "藤本 莉子",
+      age: 21,
+      matchRate: 85,
+      status: "CONFIRMED" as InterviewStatus,
+    },
+    {
+      id: "int_2",
+      date: addDays(today, 1),
+      time: "16:00",
+      candidateName: "後藤 真希",
+      age: 23,
+      matchRate: 92,
+      status: "CONFIRMED" as InterviewStatus,
+    },
+    {
+      id: "int_3",
+      date: addDays(today, 2),
+      time: "15:00",
+      candidateName: "林 杏奈",
+      age: 20,
+      matchRate: 88,
+      status: "PENDING" as InterviewStatus,
+    },
+  ];
+}

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DemoProvider } from "@/lib/demo-provider";
 import { TRPCProvider } from "@/lib/trpc-provider";
+import { SessionProvider } from "@/components/auth/SessionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +16,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "キャバクラ面接アプリ (デモ)",
-  description: "キャストと店舗を効率的にマッチングする面接アプリ - デモモード",
+  title: "LUMINA",
+  description: "LUMINA - キャストと店舗を効率的にマッチングする面接アプリ",
+  icons: {
+    icon: "/Favicon_16x16.png",
+    apple: "/Apple_Touch_Icon_180x180.png",
+  },
+  openGraph: {
+    title: "LUMINA - キャスト・店舗マッチング",
+    description: "キャストと店舗を効率的にマッチングする面接アプリ",
+    images: [
+      { url: "/OGP_1200x630_Facebook_Twitter.png", width: 1200, height: 630 },
+      { url: "/OGP_1200x1200_Instagram.png", width: 1200, height: 1200 },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LUMINA - キャスト・店舗マッチング",
+    images: ["/OGP_1200x630_Facebook_Twitter.png"],
+  },
 };
 
 export default function RootLayout({
@@ -30,7 +48,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <TRPCProvider>
-          <DemoProvider>{children}</DemoProvider>
+          <SessionProvider>
+            <DemoProvider>{children}</DemoProvider>
+          </SessionProvider>
         </TRPCProvider>
       </body>
     </html>
