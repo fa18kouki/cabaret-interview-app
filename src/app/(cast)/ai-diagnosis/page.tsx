@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useAppSession } from "@/lib/demo-session";
 import { ChevronLeft, MoreHorizontal, Send } from "lucide-react";
-import { useDemoSession } from "@/lib/demo-session";
 import { ChatBubble } from "@/components/cast/ChatBubble";
 
 interface Message {
@@ -90,25 +90,24 @@ const SALARY_RESPONSE: Message[] = [
 
 export default function AIDiagnosisPage() {
   const router = useRouter();
-  const { session } = useDemoSession();
+  const { data: session, status } = useAppSession();
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [inputValue, setInputValue] = useState("");
   const [step, setStep] = useState<"area" | "salary" | "done">("area");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!session) {
-      router.push("/login");
-    } else if (session.user.role !== "CAST") {
-      router.push("/store/dashboard");
+    if (status === "unauthenticated" || (session && session.user.role !== "CAST")) {
+      if (status === "unauthenticated") router.push("/login");
+      else if (session?.user.role !== "CAST") router.push("/store/dashboard");
     }
-  }, [session, router]);
+  }, [session, status, router]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  if (!session || session.user.role !== "CAST") {
+  if (status === "loading" || !session || session.user.role !== "CAST") {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
@@ -187,7 +186,7 @@ export default function AIDiagnosisPage() {
       </div>
 
       {/* 入力エリア */}
-      <div className="bg-white px-5 py-4 border-t border-gray-100 flex gap-2.5">
+      <div className="bg-white px-4 sm:px-5 py-3 sm:py-4 border-t border-gray-100 flex gap-2.5">
         <input
           type="text"
           value={inputValue}

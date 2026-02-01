@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
+import { useAppSession } from "@/lib/demo-session";
 import {
   ChevronLeft,
   Heart,
@@ -15,7 +16,6 @@ import {
   Smile,
   MessageCircle,
 } from "lucide-react";
-import { useDemoSession } from "@/lib/demo-session";
 import { getMockStoresForSearch } from "@/lib/mock-data";
 
 // ローカル画像パス
@@ -42,19 +42,18 @@ type Tab = "details" | "photos" | "reviews";
 export default function StoreDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { session } = useDemoSession();
+  const { data: session, status } = useAppSession();
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [liked, setLiked] = useState(false);
 
   useEffect(() => {
-    if (!session) {
-      router.push("/login");
-    } else if (session.user.role !== "CAST") {
-      router.push("/store/dashboard");
+    if (status === "unauthenticated" || (session && session.user.role !== "CAST")) {
+      if (status === "unauthenticated") router.push("/login");
+      else if (session?.user.role !== "CAST") router.push("/store/dashboard");
     }
-  }, [session, router]);
+  }, [session, status, router]);
 
-  if (!session || session.user.role !== "CAST") {
+  if (status === "loading" || !session || session.user.role !== "CAST") {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
@@ -62,7 +61,6 @@ export default function StoreDetailPage() {
     );
   }
 
-  // デモモード: モックデータから店舗を取得
   const stores = getMockStoresForSearch();
   const store = stores.find((s) => s.id === params.id) || stores[0];
   const imageUrl = STORE_IMAGES[store.name] || DEFAULT_IMAGE;
@@ -70,7 +68,7 @@ export default function StoreDetailPage() {
   return (
     <div className="min-h-screen bg-(--bg-gray) -m-4 md:-m-8">
       {/* ヒーロー画像 */}
-      <div className="relative h-[280px] w-full">
+      <div className="relative h-[200px] sm:h-[280px] w-full">
         <Image
           src={imageUrl}
           alt={store.name}
@@ -192,15 +190,15 @@ export default function StoreDetailPage() {
       </div>
 
       {/* 固定CTAフッター */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white px-6 py-4 pb-8 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex gap-3 z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-white px-4 sm:px-6 py-3 sm:py-4 pb-6 sm:pb-8 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex gap-3 z-50">
         <Link
           href="/matches"
-          className="flex-1 h-[54px] border-2 border-(--primary) text-(--primary) rounded-full flex items-center justify-center font-bold text-base"
+          className="flex-1 h-12 sm:h-[54px] border-2 border-(--primary) text-(--primary) rounded-full flex items-center justify-center font-bold text-sm sm:text-base"
         >
           <MessageCircle className="w-5 h-5 mr-1.5" />
           相談
         </Link>
-        <button className="flex-1 h-[54px] bg-gradient-to-r from-[#FF69B4] to-[#FF8DA1] text-white rounded-full flex items-center justify-center font-bold text-base shadow-[0_4px_12px_rgba(255,105,180,0.3)]">
+        <button className="flex-1 h-12 sm:h-[54px] bg-gradient-to-r from-[#FF69B4] to-[#FF8DA1] text-white rounded-full flex items-center justify-center font-bold text-sm sm:text-base shadow-[0_4px_12px_rgba(255,105,180,0.3)]">
           応募する
         </button>
       </div>

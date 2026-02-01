@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAppSession } from "@/lib/demo-session";
 import { Bot, Store, MessageSquare, UserCircle } from "lucide-react";
-import { useDemoSession } from "@/lib/demo-session";
 import { createMockCastProfile, getMockStoresForSearch } from "@/lib/mock-data";
 import { QuickActionCard } from "@/components/cast/QuickActionCard";
 import { StoreCard } from "@/components/cast/StoreCard";
@@ -21,17 +21,16 @@ const AVATAR_IMAGE = "/gold-dress-back.png";
 
 export default function CastDashboard() {
   const router = useRouter();
-  const { session } = useDemoSession();
+  const { data: session, status } = useAppSession();
 
   useEffect(() => {
-    if (!session) {
-      router.push("/login");
-    } else if (session.user.role !== "CAST") {
-      router.push("/store/dashboard");
+    if (status === "unauthenticated" || (session && session.user.role !== "CAST")) {
+      if (status === "unauthenticated") router.push("/login");
+      else if (session?.user.role !== "CAST") router.push("/store/dashboard");
     }
-  }, [session, router]);
+  }, [session, status, router]);
 
-  if (!session || session.user.role !== "CAST") {
+  if (status === "loading" || !session || session.user.role !== "CAST") {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
@@ -39,7 +38,6 @@ export default function CastDashboard() {
     );
   }
 
-  // デモモード: モックデータを使用
   const profile = createMockCastProfile(session.user.id);
   const recommendedStores = getMockStoresForSearch().slice(0, 4);
 
@@ -69,7 +67,7 @@ export default function CastDashboard() {
       </div>
 
       {/* クイックアクション */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <QuickActionCard
           href="/ai-diagnosis"
           label="AI診断"

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAppSession } from "@/lib/demo-session";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +15,14 @@ const AREAS = [
 
 export default function CastProfilePage() {
   const router = useRouter();
+  const { data: session, status } = useAppSession();
   const { data: profile, isLoading } = trpc.cast.getProfile.useQuery();
   const utils = trpc.useUtils();
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/login");
+    else if (session && session.user.role !== "CAST") router.push("/store/dashboard");
+  }, [session, status, router]);
 
   const upsertProfile = trpc.cast.upsertProfile.useMutation({
     onSuccess: () => {
@@ -64,7 +71,7 @@ export default function CastProfilePage() {
     }));
   };
 
-  if (isLoading) {
+  if (status === "loading" || !session || session.user.role !== "CAST" || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600" />
@@ -138,7 +145,7 @@ export default function CastProfilePage() {
                     key={area}
                     type="button"
                     onClick={() => toggleArea(area)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
                       form.desiredAreas.includes(area)
                         ? "bg-pink-600 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"

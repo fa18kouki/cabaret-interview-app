@@ -1,11 +1,22 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAppSession } from "@/lib/demo-session";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 
 export default function MatchesPage() {
+  const router = useRouter();
+  const { data: session, status } = useAppSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/login");
+    else if (session && session.user.role !== "CAST") router.push("/store/dashboard");
+  }, [session, status, router]);
+
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     trpc.match.getMatches.useInfiniteQuery(
       { status: "ACCEPTED", limit: 10 },
@@ -15,6 +26,14 @@ export default function MatchesPage() {
     );
 
   const matches = data?.pages.flatMap((page) => page.matches) ?? [];
+
+  if (status === "loading" || !session || session.user.role !== "CAST") {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -43,7 +62,7 @@ export default function MatchesPage() {
           {matches.map((match) => (
             <Card key={match.id}>
               <CardContent className="py-4">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   {/* 店舗画像 */}
                   <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
                     {match.store.photos?.[0] ? (
