@@ -7,5 +7,7 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #6612 | 9:21 PM | 🔵 | Prisma 7 + PrismaPg と NextAuth Adapter の部分的互換性問題を特定 | ~398 |
+| #6598 | 9:19 PM | 🔵 | PrismaPg アダプターを使用した PostgreSQL 接続の設定 | ~180 |
 | #6548 | 8:20 PM | 🔵 | Prismaクライアント設定とPostgreSQLアダプター | ~151 |
 </claude-mem-context>

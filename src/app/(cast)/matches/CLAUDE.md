@@ -9,4 +9,10 @@
 |----|------|---|-------|------|
 | #6274 | 8:15 PM | 🔵 | Complete Cast Application Structure Analysis | ~487 |
 | #6265 | 8:13 PM | 🔵 | Matches Page Implementation | ~322 |
+
+### Feb 1, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #6640 | 9:29 PM | ✅ | 全キャストページで useSession を useAppSession に一括置換完了 | ~246 |
 </claude-mem-context>

@@ -13,4 +13,10 @@
 | #6280 | 8:17 PM | ⚖️ | Design Modification Plan for Cast App UI | ~547 |
 | #6274 | 8:15 PM | 🔵 | Complete Cast Application Structure Analysis | ~487 |
 | #6255 | 8:10 PM | 🔵 | Current Cast Navigation Implementation | ~335 |
+
+### Feb 1, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #6632 | 9:27 PM | ✅ | ナビゲーションのログアウト処理をデモセッション方式に変更 | ~207 |
 </claude-mem-context>

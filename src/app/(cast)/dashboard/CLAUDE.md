@@ -10,4 +10,10 @@
 | #6280 | 8:17 PM | ⚖️ | Design Modification Plan for Cast App UI | ~547 |
 | #6274 | 8:15 PM | 🔵 | Complete Cast Application Structure Analysis | ~487 |
 | #6261 | 8:12 PM | 🔵 | Dashboard Page Implementation | ~364 |
+
+### Feb 1, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #6629 | 9:26 PM | ✅ | ダッシュボードで useSession を useAppSession に置き換え | ~200 |
 </claude-mem-context>

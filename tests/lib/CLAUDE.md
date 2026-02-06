@@ -8,4 +8,10 @@
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
 | #6150 | 4:48 PM | 🟣 | Created authentication provider tests following TDD approach | ~319 |
+
+### Feb 1, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #6604 | 9:20 PM | 🔵 | NextAuth 設定の Vitest ユニットテスト | ~181 |
 </claude-mem-context>
