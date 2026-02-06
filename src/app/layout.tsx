@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DemoProvider } from "@/lib/demo-provider";
+import { DiagnosisProvider } from "@/lib/diagnosis-provider";
+import { ThemeProvider } from "@/lib/theme-provider";
 import { TRPCProvider } from "@/lib/trpc-provider";
 import { SessionProvider } from "@/components/auth/SessionProvider";
 
@@ -49,7 +51,11 @@ export default function RootLayout({
       >
         <TRPCProvider>
           <SessionProvider>
-            <DemoProvider>{children}</DemoProvider>
+            <DemoProvider>
+              <DiagnosisProvider>
+                <ThemeProvider>{children}</ThemeProvider>
+              </DiagnosisProvider>
+            </DemoProvider>
           </SessionProvider>
         </TRPCProvider>
       </body>

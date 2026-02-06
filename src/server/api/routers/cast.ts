@@ -13,6 +13,9 @@ export const castRouter = createTRPCRouter({
   getProfile: protectedProcedure.query(async ({ ctx }) => {
     const cast = await ctx.prisma.cast.findUnique({
       where: { userId: ctx.session.user.id },
+      include: {
+        experiences: true,
+      },
     });
 
     return cast;
@@ -24,44 +27,144 @@ export const castRouter = createTRPCRouter({
   upsertProfile: protectedProcedure
     .input(
       z.object({
+        // 基本情報
         nickname: z.string().min(1).max(50),
         age: z.number().min(18).max(99),
+        birthDate: z.string().optional(), // ISO8601形式
         description: z.string().max(1000).optional(),
         photos: z.array(z.string().url()).max(10).optional(),
+
+        // 連絡先
+        instagramId: z.string().max(30).optional(),
+        lineId: z.string().max(50).optional(),
+        currentListingUrl: z.string().url().optional().or(z.literal("")),
+
+        // 経験・スキル
+        experiences: z
+          .array(
+            z.object({
+              area: z.string(),
+              businessType: z.enum([
+                "CABARET",
+                "CLUB",
+                "LOUNGE",
+                "GIRLS_BAR",
+                "SNACK",
+                "OTHER",
+              ]),
+              durationMonths: z.number().min(0).optional(),
+            })
+          )
+          .optional(),
+        totalExperienceYears: z.number().min(0).max(50).optional(),
+        previousHourlyRate: z.number().min(0).optional(),
+        monthlySales: z.number().min(0).optional(),
+        monthlyNominations: z.number().min(0).optional(),
+        alcoholTolerance: z
+          .enum(["NONE", "WEAK", "MODERATE", "STRONG"])
+          .optional(),
+
+        // 希望条件
         desiredAreas: z.array(z.string()).optional(),
-        desiredSalary: z.number().positive().optional(),
+        desiredSalary: z.number().positive().optional(), // 後方互換
+        desiredHourlyRate: z.number().min(0).optional(),
+        desiredMonthlyIncome: z.number().min(0).optional(),
+        availableDaysPerWeek: z.number().min(1).max(7).optional(),
+        preferredAtmosphere: z.array(z.string()).optional(),
+        preferredClientele: z.array(z.string()).optional(),
+
+        // リスク回避
+        downtimeUntil: z.string().optional(), // ISO8601形式
+        isAvailableNow: z.boolean().optional(),
+
+        // 自己PR
+        birthdaySales: z.number().min(0).optional(),
+        hasVipClients: z.boolean().optional(),
+        vipClientDescription: z.string().max(500).optional(),
+        socialFollowers: z.number().min(0).optional(),
+
+        // MUST/WANT条件
         mustConditions: z.record(z.string(), z.unknown()).optional(),
         wantConditions: z.record(z.string(), z.unknown()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const mustConditions = input.mustConditions as Prisma.InputJsonValue | undefined;
-      const wantConditions = input.wantConditions as Prisma.InputJsonValue | undefined;
+      const mustConditions = input.mustConditions as
+        | Prisma.InputJsonValue
+        | undefined;
+      const wantConditions = input.wantConditions as
+        | Prisma.InputJsonValue
+        | undefined;
+
+      // 日付のパース
+      const birthDate = input.birthDate
+        ? new Date(input.birthDate)
+        : undefined;
+      const downtimeUntil = input.downtimeUntil
+        ? new Date(input.downtimeUntil)
+        : undefined;
+
+      const profileData = {
+        nickname: input.nickname,
+        age: input.age,
+        birthDate,
+        description: input.description,
+        photos: input.photos ?? [],
+        // 連絡先
+        instagramId: input.instagramId,
+        lineId: input.lineId,
+        currentListingUrl: input.currentListingUrl || null,
+        // 経験・スキル
+        totalExperienceYears: input.totalExperienceYears,
+        previousHourlyRate: input.previousHourlyRate,
+        monthlySales: input.monthlySales,
+        monthlyNominations: input.monthlyNominations,
+        alcoholTolerance: input.alcoholTolerance,
+        // 希望条件
+        desiredAreas: input.desiredAreas ?? [],
+        desiredSalary: input.desiredSalary,
+        desiredHourlyRate: input.desiredHourlyRate,
+        desiredMonthlyIncome: input.desiredMonthlyIncome,
+        availableDaysPerWeek: input.availableDaysPerWeek,
+        preferredAtmosphere: input.preferredAtmosphere ?? [],
+        preferredClientele: input.preferredClientele ?? [],
+        // リスク回避
+        downtimeUntil,
+        isAvailableNow: input.isAvailableNow ?? true,
+        // 自己PR
+        birthdaySales: input.birthdaySales,
+        hasVipClients: input.hasVipClients ?? false,
+        vipClientDescription: input.vipClientDescription,
+        socialFollowers: input.socialFollowers,
+        // MUST/WANT
+        mustConditions,
+        wantConditions,
+      };
 
       const cast = await ctx.prisma.cast.upsert({
         where: { userId: ctx.session.user.id },
-        update: {
-          nickname: input.nickname,
-          age: input.age,
-          description: input.description,
-          photos: input.photos ?? [],
-          desiredAreas: input.desiredAreas ?? [],
-          desiredSalary: input.desiredSalary,
-          mustConditions,
-          wantConditions,
-        },
+        update: profileData,
         create: {
           userId: ctx.session.user.id,
-          nickname: input.nickname,
-          age: input.age,
-          description: input.description,
-          photos: input.photos ?? [],
-          desiredAreas: input.desiredAreas ?? [],
-          desiredSalary: input.desiredSalary,
-          mustConditions,
-          wantConditions,
+          ...profileData,
         },
       });
+
+      // 経験データの更新（存在する場合は全削除して再作成）
+      if (input.experiences && input.experiences.length > 0) {
+        await ctx.prisma.castExperience.deleteMany({
+          where: { castId: cast.id },
+        });
+
+        await ctx.prisma.castExperience.createMany({
+          data: input.experiences.map((exp) => ({
+            castId: cast.id,
+            area: exp.area,
+            businessType: exp.businessType,
+            durationMonths: exp.durationMonths,
+          })),
+        });
+      }
 
       // ユーザーロールをCASTに設定
       await ctx.prisma.user.update({
