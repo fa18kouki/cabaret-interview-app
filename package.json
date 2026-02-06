@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@line/bot-sdk": "^10.5.0",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@tanstack/react-query": "^5.90.20",
@@ -37,6 +38,8 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22",
     "@types/nodemailer": "^7.0.9",
     "@types/pg": "^8.16.0",
@@ -45,6 +48,7 @@
     "@vitest/ui": "^4.0.18",
     "eslint": "^9",
     "eslint-config-next": "^16.1.6",
+    "jsdom": "^28.0.0",
     "postcss": "^8",
     "tailwindcss": "^4",
     "typescript": "^5",
