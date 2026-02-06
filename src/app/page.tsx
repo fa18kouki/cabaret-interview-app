@@ -1,25 +1,23 @@
 import {
   Hero,
-  ServiceSteps,
-  AppFeatures,
-  StoreShowcase,
+  HowItWorks,
+  PickupStores,
   UserVoices,
   FAQ,
-  CTA,
   Footer,
+  FixedCTA,
 } from "@/components/lp";
 
 export default function Home() {
   return (
-    <main>
+    <main className="bg-black">
       <Hero />
-      <ServiceSteps />
-      <AppFeatures />
-      <StoreShowcase />
+      <HowItWorks />
+      <PickupStores />
       <UserVoices />
       <FAQ />
-      <CTA />
       <Footer />
+      <FixedCTA />
     </main>
   );
 }

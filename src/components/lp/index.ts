@@ -1,10 +1,13 @@
 export { SectionHeader } from "./SectionHeader";
 export { GradientButton } from "./GradientButton";
 export { Hero } from "./Hero";
+export { HowItWorks } from "./HowItWorks";
 export { ServiceSteps } from "./ServiceSteps";
 export { AppFeatures } from "./AppFeatures";
+export { PickupStores } from "./PickupStores";
 export { StoreShowcase } from "./StoreShowcase";
 export { UserVoices } from "./UserVoices";
 export { FAQ } from "./FAQ";
 export { CTA } from "./CTA";
+export { FixedCTA } from "./FixedCTA";
 export { Footer } from "./Footer";
