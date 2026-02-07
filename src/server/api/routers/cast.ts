@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -261,6 +262,61 @@ export const castRouter = createTRPCRouter({
         offers,
         nextCursor,
       };
+    }),
+
+  /**
+   * オファー詳細取得
+   */
+  getOfferDetail: castProcedure
+    .input(
+      z.object({
+        offerId: z.string(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const cast = await ctx.prisma.cast.findUnique({
+        where: { userId: ctx.session.user.id },
+        select: { id: true },
+      });
+
+      if (!cast) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "キャストプロフィールが見つかりません",
+        });
+      }
+
+      const offer = await ctx.prisma.offer.findUnique({
+        where: {
+          id: input.offerId,
+          castId: cast.id,
+        },
+        include: {
+          store: {
+            select: {
+              id: true,
+              name: true,
+              area: true,
+              address: true,
+              description: true,
+              photos: true,
+              businessHours: true,
+              salarySystem: true,
+              benefits: true,
+              isVerified: true,
+            },
+          },
+        },
+      });
+
+      if (!offer) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "オファーが見つかりません",
+        });
+      }
+
+      return offer;
     }),
 
   /**
