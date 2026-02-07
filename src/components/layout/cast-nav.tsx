@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useDemoSession } from "@/lib/demo-session";
-import { Home, Search, Bot, MessageCircle, User, LogOut } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { Home, Search, Bot, Bell, MessageCircle, User, LogOut } from "lucide-react";
 
 const navItems = [
   {
@@ -22,6 +23,12 @@ const navItems = [
     icon: Bot,
   },
   {
+    href: "/offers",
+    label: "オファー",
+    icon: Bell,
+    showBadge: true,
+  },
+  {
     href: "/matches",
     label: "トーク",
     icon: MessageCircle,
@@ -37,6 +44,12 @@ export function CastNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useDemoSession();
+
+  const { data: unreadData } = trpc.notification.getUnreadCount.useQuery(
+    undefined,
+    { refetchInterval: 30_000 }
+  );
+  const unreadCount = unreadData?.count ?? 0;
 
   const handleLogout = () => {
     logout();
@@ -58,14 +71,15 @@ export function CastNav() {
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href === "/matches" && pathname.startsWith("/chat"));
+            (item.href === "/matches" && pathname.startsWith("/chat")) ||
+            (item.href === "/offers" && pathname.startsWith("/offers"));
           const Icon = item.icon;
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
                 className={`
-                  flex flex-col md:flex-row items-center gap-1 md:gap-3
+                  relative flex flex-col md:flex-row items-center gap-1 md:gap-3
                   p-2 md:px-4 md:py-3 rounded-lg
                   transition-colors
                   ${
@@ -75,7 +89,14 @@ export function CastNav() {
                   }
                 `}
               >
-                <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2.5 : 2} />
+                <span className="relative">
+                  <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2.5 : 2} />
+                  {item.showBadge && unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-0.5">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </span>
                 <span className="text-[10px] md:text-sm font-medium">{item.label}</span>
               </Link>
             </li>
