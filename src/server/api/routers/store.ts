@@ -5,6 +5,7 @@ import {
   protectedProcedure,
   storeProcedure,
 } from "@/server/api/trpc";
+import { dispatchNotification } from "@/server/notifications";
 
 export const storeRouter = createTRPCRouter({
   /**
@@ -135,7 +136,7 @@ export const storeRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const store = await ctx.prisma.store.findUnique({
         where: { userId: ctx.session.user.id },
-        select: { id: true },
+        select: { id: true, name: true, area: true },
       });
 
       if (!store) {
@@ -155,6 +156,21 @@ export const storeRouter = createTRPCRouter({
         throw new Error("このキャストには既にオファーを送信済みです");
       }
 
+      // キャスト情報を取得（通知に必要）
+      const cast = await ctx.prisma.cast.findUnique({
+        where: { id: input.castId },
+        select: {
+          id: true,
+          userId: true,
+          lineUserId: true,
+          user: { select: { email: true } },
+        },
+      });
+
+      if (!cast) {
+        throw new Error("キャストが見つかりません");
+      }
+
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + input.expiresInDays);
 
@@ -164,6 +180,20 @@ export const storeRouter = createTRPCRouter({
           castId: input.castId,
           message: input.message,
           expiresAt,
+        },
+      });
+
+      // 通知送信（fire-and-forget: 失敗してもオファー作成に影響しない）
+      await dispatchNotification({
+        type: "OFFER_RECEIVED",
+        payload: {
+          offerId: offer.id,
+          castUserId: cast.userId,
+          castLineUserId: cast.lineUserId,
+          castEmail: cast.user.email,
+          storeName: store.name,
+          storeArea: store.area,
+          offerMessage: input.message,
         },
       });
 
