@@ -1,18 +1,65 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import Google from "next-auth/providers/google";
+import type { AdapterUser } from "@auth/core/adapters";
 import Line from "next-auth/providers/line";
 import Twitter from "next-auth/providers/twitter";
 import Nodemailer from "next-auth/providers/nodemailer";
 import { prisma } from "@/server/db";
+import type { UserRole } from "@prisma/client";
+
+// Prisma 7 + PrismaPg 使用時、API ルートで account の findUnique/findFirst が
+// Invalid invocation になるため、getUserByAccount / unlinkAccount のみ $queryRaw / $executeRaw で実装
+function createAuthAdapter() {
+  const base = PrismaAdapter(prisma);
+  return {
+    ...base,
+    async getUserByAccount(provider_providerAccountId: {
+      provider: string;
+      providerAccountId: string;
+    }): Promise<AdapterUser | null> {
+      const rows = await prisma.$queryRaw<
+        Array<{
+          id: string;
+          email: string | null;
+          email_verified: Date | null;
+          image: string | null;
+          role: string;
+        }>
+      >`
+        SELECT u.id, u.email, u.email_verified, u.image, u.role
+        FROM accounts a
+        JOIN users u ON u.id = a.user_id
+        WHERE a.provider = ${provider_providerAccountId.provider}
+          AND a.provider_account_id = ${provider_providerAccountId.providerAccountId}
+        LIMIT 1
+      `;
+      const row = rows[0];
+      if (!row) return null;
+      return {
+        id: row.id,
+        email: row.email,
+        emailVerified: row.email_verified,
+        name: null,
+        image: row.image,
+        role: row.role as UserRole,
+      } as AdapterUser;
+    },
+    async unlinkAccount(provider_providerAccountId: {
+      provider: string;
+      providerAccountId: string;
+    }): Promise<void> {
+      await prisma.$executeRaw`
+        DELETE FROM accounts
+        WHERE provider = ${provider_providerAccountId.provider}
+          AND provider_account_id = ${provider_providerAccountId.providerAccountId}
+      `;
+    },
+  };
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: createAuthAdapter(),
   providers: [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-    }),
     Line({
       clientId: process.env.AUTH_LINE_ID,
       clientSecret: process.env.AUTH_LINE_SECRET,
@@ -39,6 +86,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       user: {
         ...session.user,
         id: user.id,
+        role: (user as unknown as { role: UserRole }).role,
       },
     }),
   },
@@ -56,6 +104,7 @@ declare module "next-auth" {
       email?: string | null;
       name?: string | null;
       image?: string | null;
+      role: UserRole;
     };
   }
 }

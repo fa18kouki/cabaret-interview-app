@@ -1,214 +1,334 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { trpc } from "@/lib/trpc";
+import { useRouter } from "next/navigation";
+import {
+  UserPlus,
+  CalendarDays,
+  CheckCircle2,
+  MessageSquare,
+  FileEdit,
+  Search,
+  Mail,
+  ChevronRight,
+  Clock,
+  Calendar,
+} from "lucide-react";
+import { useDemoSession } from "@/lib/demo-session";
+import {
+  getMockRecentApplicants,
+  getMockUpcomingInterviews,
+  type ApplicantStatus,
+  type InterviewStatus,
+} from "@/lib/mock-data";
+
+function formatApplicantDate(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${y}/${m}/${day} ${h}:${min}`;
+}
+
+function formatInterviewDate(d: Date) {
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+  const w = weekdays[d.getDay()];
+  return `${m}月${day}日(${w})`;
+}
+
+function statusLabel(s: ApplicantStatus) {
+  switch (s) {
+    case "UNREAD":
+      return "未確認";
+    case "CONFIRMED":
+      return "確認済み";
+    case "INTERVIEW_SCHEDULED":
+      return "面接予定";
+    default:
+      return String(s);
+  }
+}
+
+function interviewStatusLabel(s: InterviewStatus) {
+  return s === "CONFIRMED" ? "確定" : "調整中";
+}
 
 export default function StoreDashboardPage() {
-  const { data: profile, isLoading: profileLoading } = trpc.store.getProfile.useQuery();
-  const { data: offersData, isLoading: offersLoading } = trpc.store.getSentOffers.useQuery({
-    limit: 5,
-  });
-  const { data: matchesData, isLoading: matchesLoading } = trpc.match.getMatches.useQuery({
-    status: "ACCEPTED",
-    limit: 5,
-  });
+  const router = useRouter();
+  const { session } = useDemoSession();
 
-  if (profileLoading) {
+  useEffect(() => {
+    if (!session) {
+      router.push("/login");
+    } else if (session.user.role !== "STORE") {
+      router.push("/dashboard");
+    }
+  }, [session, router]);
+
+  if (!session || session.user.role !== "STORE") {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]" />
       </div>
     );
   }
 
-  if (!profile) {
-    return (
-      <div className="max-w-2xl mx-auto text-center py-12">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">店舗情報を登録しましょう</h1>
-        <p className="text-gray-600 mb-6">
-          キャストを検索してオファーを送るには、まず店舗情報の登録が必要です。
-        </p>
-        <Link
-          href="/store/profile"
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          店舗情報を登録する
-        </Link>
-      </div>
-    );
-  }
-
-  const pendingOffers = offersData?.offers?.filter(o => o.status === "PENDING").length ?? 0;
-  const acceptedMatches = matchesData?.matches?.length ?? 0;
+  const applicants = getMockRecentApplicants();
+  const interviews = getMockUpcomingInterviews();
+  const newApplicantsCount = 12;
+  const interviewsThisWeek = 5;
+  const hiredThisMonth = 3;
+  const unreadMessagesCount = 8;
 
   return (
-    <div className="space-y-6">
-      {/* ヘッダー */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">ダッシュボード</h1>
-        <p className="text-gray-600 mt-1">
-          {profile.name}さん、おかえりなさい
-        </p>
-      </div>
-
+    <div className="space-y-10">
       {/* 統計カード */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-white rounded-2xl p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex items-start justify-between hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all">
+          <div>
+            <h3 className="text-sm text-[var(--text-sub)] font-medium mb-2">
+              新規応募
+            </h3>
+            <div className="text-[32px] font-bold text-[var(--text-main)] leading-tight">
+              {newApplicantsCount}
+              <span className="text-base font-normal ml-1">件</span>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{pendingOffers}</p>
-              <p className="text-xs text-gray-500">待機中オファー</p>
-            </div>
+            <div className="text-xs text-[var(--text-sub)] mt-1">今週</div>
           </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{acceptedMatches}</p>
-              <p className="text-xs text-gray-500">マッチング成立</p>
-            </div>
+          <div className="w-12 h-12 rounded-xl bg-[var(--primary-bg)] text-[var(--primary)] flex items-center justify-center">
+            <UserPlus className="w-6 h-6" aria-hidden />
           </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">0</p>
-              <p className="text-xs text-gray-500">今週の面接</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">0</p>
-              <p className="text-xs text-gray-500">採用済み</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* クイックアクション */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <Link href="/store/casts">
-          <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">キャストを探す</h3>
-                <p className="text-sm text-gray-600">条件に合ったキャストを検索</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
-
-        <Link href="/store/offers">
-          <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">オファー管理</h3>
-                <p className="text-sm text-gray-600">送信したオファーを確認</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
-      </div>
-
-      {/* 最近のマッチング */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">最近のマッチング</h2>
-          <Link href="/store/matches" className="text-sm text-blue-600 hover:underline">
-            すべて見る
-          </Link>
         </div>
 
-        {matchesLoading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
+        <div className="bg-white rounded-2xl p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex items-start justify-between hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all">
+          <div>
+            <h3 className="text-sm text-[var(--text-sub)] font-medium mb-2">
+              面接予定
+            </h3>
+            <div className="text-[32px] font-bold text-[var(--text-main)] leading-tight">
+              {interviewsThisWeek}
+              <span className="text-base font-normal ml-1">件</span>
+            </div>
+            <div className="text-xs text-[var(--text-sub)] mt-1">今週</div>
           </div>
-        ) : matchesData?.matches?.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p>まだマッチングがありません</p>
-            <p className="text-sm mt-1">キャストを検索してオファーを送りましょう</p>
+          <div className="w-12 h-12 rounded-xl bg-[#EBF3FB] text-[#4A90E2] flex items-center justify-center">
+            <CalendarDays className="w-6 h-6" aria-hidden />
           </div>
-        ) : (
-          <div className="space-y-3">
-            {matchesData?.matches?.map((match) => (
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex items-start justify-between hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all">
+          <div>
+            <h3 className="text-sm text-[var(--text-sub)] font-medium mb-2">
+              採用決定
+            </h3>
+            <div className="text-[32px] font-bold text-[var(--text-main)] leading-tight">
+              {hiredThisMonth}
+              <span className="text-base font-normal ml-1">名</span>
+            </div>
+            <div className="text-xs text-[var(--text-sub)] mt-1">今月</div>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-[#E8F8F0] text-[#2ECC71] flex items-center justify-center">
+            <CheckCircle2 className="w-6 h-6" aria-hidden />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex items-start justify-between hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all">
+          <div>
+            <h3 className="text-sm text-[var(--text-sub)] font-medium mb-2">
+              未読メッセージ
+            </h3>
+            <div className="text-[32px] font-bold text-[var(--text-main)] leading-tight">
+              {unreadMessagesCount}
+              <span className="text-base font-normal ml-1">件</span>
+            </div>
+            <div className="text-xs text-[#FF9F43] mt-1">要対応</div>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-[#FFF4E5] text-[#FF9F43] flex items-center justify-center">
+            <MessageSquare className="w-6 h-6" aria-hidden />
+          </div>
+        </div>
+      </div>
+
+      {/* 2カラム: 最近の応募者 + 今週の面接予定 */}
+      <div className="grid lg:grid-cols-[2fr_1fr] gap-6">
+        {/* 最近の応募者 */}
+        <div className="bg-white rounded-2xl p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)]">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
+              <span className="block w-1 h-5 bg-[var(--primary)] rounded-sm" />
+              最近の応募者
+            </h2>
+            <Link
+              href="/store/casts"
+              className="text-sm text-[#4A90E2] font-medium hover:underline"
+            >
+              すべて見る <ChevronRight className="inline w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border-separate border-spacing-0">
+              <thead>
+                <tr>
+                  <th className="text-left py-3 px-4 text-[13px] text-[var(--text-sub)] font-medium border-b border-[#EEEEEE]">
+                    応募日時
+                  </th>
+                  <th className="text-left py-3 px-4 text-[13px] text-[var(--text-sub)] font-medium border-b border-[#EEEEEE]">
+                    名前
+                  </th>
+                  <th className="text-left py-3 px-4 text-[13px] text-[var(--text-sub)] font-medium border-b border-[#EEEEEE]">
+                    年齢
+                  </th>
+                  <th className="text-left py-3 px-4 text-[13px] text-[var(--text-sub)] font-medium border-b border-[#EEEEEE]">
+                    診断結果
+                  </th>
+                  <th className="text-left py-3 px-4 text-[13px] text-[var(--text-sub)] font-medium border-b border-[#EEEEEE]">
+                    ステータス
+                  </th>
+                  <th className="text-left py-3 px-4 text-[13px] text-[var(--text-sub)] font-medium border-b border-[#EEEEEE]">
+                    アクション
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {applicants.map((row) => (
+                  <tr key={row.id} className="hover:bg-[#FAFAFA]">
+                    <td className="py-4 px-4 text-sm text-[var(--text-main)] border-b border-[#F5F5F5]">
+                      {formatApplicantDate(row.appliedAt)}
+                    </td>
+                    <td className="py-4 px-4 text-sm text-[var(--text-main)] border-b border-[#F5F5F5] max-w-[150px] truncate">
+                      {row.name}
+                    </td>
+                    <td className="py-4 px-4 text-sm text-[var(--text-main)] border-b border-[#F5F5F5]">
+                      {row.age}歳
+                    </td>
+                    <td className="py-4 px-4 text-sm font-semibold text-[var(--primary)] border-b border-[#F5F5F5]">
+                      マッチ度 {row.matchRate}%
+                    </td>
+                    <td className="py-4 px-4 border-b border-[#F5F5F5]">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-xl text-xs font-medium ${
+                          row.status === "UNREAD"
+                            ? "bg-[#FFF4E5] text-[#FF9F43]"
+                            : row.status === "CONFIRMED"
+                              ? "bg-[#EBF3FB] text-[#4A90E2]"
+                              : "bg-[#E8F8F0] text-[#2ECC71]"
+                        }`}
+                      >
+                        {statusLabel(row.status)}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 border-b border-[#F5F5F5]">
+                      <button
+                        type="button"
+                        className="py-1.5 px-4 rounded-2xl text-xs font-medium border border-[#E0E0E0] bg-white text-[var(--text-main)] hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary-bg)] transition-colors"
+                      >
+                        詳細
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* クイックアクション */}
+          <div className="mt-8">
+            <h3 className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2 mb-5">
+              <span className="block w-1 h-5 bg-[var(--primary)] rounded-sm" />
+              クイックアクション
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
               <Link
-                key={match.id}
-                href={`/store/chat/${match.id}`}
-                className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                href="/store/profile"
+                className="flex items-center justify-center gap-2.5 py-4 px-4 rounded-xl text-white font-bold text-[15px] bg-gradient-to-br from-[var(--primary)] to-[#FF86C2] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 transition-all"
               >
-                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                  {match.cast?.photos?.[0] ? (
-                    <img
-                      src={match.cast.photos[0]}
-                      alt={match.cast.nickname}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">
-                    {match.cast?.nickname ?? "キャスト"}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {match.cast?.age}歳
-                  </p>
-                </div>
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <FileEdit className="w-5 h-5" aria-hidden />
+                求人情報を更新
               </Link>
+              <Link
+                href="/store/casts"
+                className="flex items-center justify-center gap-2.5 py-4 px-4 rounded-xl text-white font-bold text-[15px] bg-gradient-to-br from-[#4A90E2] to-[#64A8F5] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 transition-all"
+              >
+                <Search className="w-5 h-5" aria-hidden />
+                応募者を検索
+              </Link>
+              <Link
+                href="/store/matches"
+                className="flex items-center justify-center gap-2.5 py-4 px-4 rounded-xl font-bold text-[15px] text-[#555] bg-gradient-to-br from-[var(--primary-light)] to-[#FFD1DA] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 transition-all"
+              >
+                <Mail className="w-5 h-5" aria-hidden />
+                メッセージを送信
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* 今週の面接予定 */}
+        <div className="bg-white rounded-2xl p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)]">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
+              <span className="block w-1 h-5 bg-[var(--primary)] rounded-sm" />
+              今週の面接予定
+            </h2>
+            <Link
+              href="/store/interviews"
+              className="text-sm text-[#4A90E2] font-medium hover:underline"
+            >
+              カレンダー <Calendar className="inline w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {interviews.map((item) => (
+              <div
+                key={item.id}
+                className="border border-[#EEEEEE] rounded-xl p-4 flex flex-col gap-3"
+              >
+                <div className="flex items-center gap-2 text-[13px] text-[var(--text-sub)]">
+                  <Clock className="w-4 h-4 shrink-0" aria-hidden />
+                  {formatInterviewDate(item.date)} {item.time}
+                  <span
+                    className={`ml-auto px-3 py-1 rounded-xl text-xs font-medium shrink-0 ${
+                      item.status === "CONFIRMED"
+                        ? "bg-[#E8F8F0] text-[#2ECC71]"
+                        : "bg-[#FFF4E5] text-[#FF9F43]"
+                    }`}
+                  >
+                    {interviewStatusLabel(item.status)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-base text-[var(--text-main)]">
+                    {item.candidateName} ({item.age})
+                  </span>
+                  <span className="text-[var(--primary)] font-semibold text-sm">
+                    {item.matchRate}%
+                  </span>
+                </div>
+                <div className="flex gap-2 mt-1">
+                  <button
+                    type="button"
+                    className="flex-1 py-2 text-center rounded-[20px] text-[13px] font-medium bg-white text-[var(--primary)] border border-[var(--primary)] hover:opacity-90 transition-opacity"
+                  >
+                    詳細
+                  </button>
+                  <Link
+                    href="/store/matches"
+                    className="flex-1 py-2 text-center rounded-[20px] text-[13px] font-medium bg-[var(--primary)] text-white hover:opacity-90 transition-opacity"
+                  >
+                    メッセージ
+                  </Link>
+                </div>
+              </div>
             ))}
           </div>
-        )}
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMINA 店長管理画面</title>
+    <link rel="icon" type="image/png" href="public/Favicon_16x16.png" sizes="16x16">
+    <link rel="apple-touch-icon" href="public/Apple_Touch_Icon_180x180.png" sizes="180x180">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans JP', 'NotoSansHans-Regular', sans-serif;
+        }
+
+        body {
+            background-color: #F5F5F5;
+            color: #333333;
+            width: 1920px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Color Variables */
+        :root {
+            --primary-pink: #FF69B4;
+            --soft-pink: #FFC0CB;
+            --light-pink-bg: #FFF0F5;
+            --accent-blue: #4A90E2;
+            --accent-green: #2ECC71;
+            --accent-orange: #FF9F43;
+            --text-dark: #333333;
+            --text-gray: #888888;
+            --bg-gray: #F5F5F5;
+            --white: #FFFFFF;
+        }
+
+        /* Layout Structure */
+        .container {
+            display: flex;
+            width: 100%;
+            height: calc(100vh - 70px); /* Adjust based on topbar height */
+            margin-top: 70px;
+        }
+
+        /* Top Bar */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 1920px;
+            height: 70px;
+            background-color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+            color: var(--primary-pink);
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: 0.5px;
+        }
+
+        .store-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-gray);
+            background-color: var(--bg-gray);
+            padding: 8px 20px;
+            border-radius: 20px;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-btn {
+            position: relative;
+            font-size: 22px;
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .notification-btn:hover {
+            color: var(--primary-pink);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary-pink);
+            border-radius: 50%;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--soft-pink);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-pink);
+            font-weight: 700;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--white);
+            height: 100%;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-right: 1px solid #EAEAEA;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            color: var(--text-gray);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .nav-item:hover {
+            background-color: #FAFAFA;
+            color: var(--primary-pink);
+        }
+
+        .nav-item.active {
+            background-color: var(--light-pink-bg);
+            color: var(--primary-pink);
+            font-weight: 700;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            background-color: var(--bg-gray);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-info h3 {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.2;
+        }
+
+        .stat-sub {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-top: 4px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .icon-pink { background: var(--light-pink-bg); color: var(--primary-pink); }
+        .icon-blue { background: #EBF3FB; color: var(--accent-blue); }
+        .icon-green { background: #E8F8F0; color: var(--accent-green); }
+        .icon-orange { background: #FFF4E5; color: var(--accent-orange); }
+
+        /* Content Grid Layout */
+        .content-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .section-container {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 20px;
+            background-color: var(--primary-pink);
+            border-radius: 2px;
+        }
+
+        .see-all {
+            font-size: 14px;
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Table Styles */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-gray);
+            font-weight: 500;
+            border-bottom: 1px solid #EEEEEE;
+        }
+
+        td {
+            padding: 16px;
+            font-size: 14px;
+            color: var(--text-dark);
+            border-bottom: 1px solid #F5F5F5;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #FAFAFA;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-orange { background: #FFF4E5; color: var(--accent-orange); }
+        .badge-blue { background: #EBF3FB; color: var(--accent-blue); }
+        .badge-green { background: #E8F8F0; color: var(--accent-green); }
+
+        /* Action Buttons */
+        .btn-sm {
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #E0E0E0;
+            background: white;
+            color: var(--text-dark);
+            transition: all 0.2s;
+        }
+
+        .btn-sm:hover {
+            border-color: var(--primary-pink);
+            color: var(--primary-pink);
+            background: var(--light-pink-bg);
+        }
+
+        /* Interview List */
+        .interview-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .interview-card {
+            border: 1px solid #EEEEEE;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .interview-date-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .interview-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .candidate-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--text-dark);
+        }
+
+        .match-rate {
+            color: var(--primary-pink);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .interview-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 8px 0;
+            text-align: center;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-pink);
+            color: white;
+            border: none;
+        }
+
+        .btn-outline {
+            background-color: white;
+            color: var(--primary-pink);
+            border: 1px solid var(--primary-pink);
+        }
+
+        .btn-action:hover {
+            opacity: 0.9;
+        }
+
+        /* Quick Actions */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .qa-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            font-size: 15px;
+        }
+
+        .qa-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .bg-pink { background: linear-gradient(135deg, var(--primary-pink), #FF86C2); }
+        .bg-blue { background: linear-gradient(135deg, var(--accent-blue), #64A8F5); }
+        .bg-soft { background: linear-gradient(135deg, var(--soft-pink), #FFD1DA); color: #555; }
+
+        /* Utility */
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <header class="topbar">
+        <div class="logo-area">
+            <i class="ri-vip-diamond-line logo-icon"></i>
+            <div class="logo-text">LUMINA 管理画面</div>
+        </div>
+        
+        <div class="store-name">
+            <i class="ri-store-2-line" style="margin-right: 6px;"></i>六本木 ルミナスラウンジ
+        </div>
+
+        <div class="user-actions">
+            <div class="notification-btn">
+                <i class="ri-notification-3-line"></i>
+                <div class="notification-badge"></div>
+            </div>
+            <div class="user-profile">
+                <div class="avatar">店長</div>
+                <i class="ri-arrow-down-s-line" style="color: var(--text-gray);"></i>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <a href="#" class="nav-item active">
+                <i class="ri-dashboard-line"></i>
+                ダッシュボード
+            </a>
+            <a href="#" class="nav-item">
+                <i class="ri-user-heart-line"></i>
+                応募者管理
+            </a>
+            <a href="#" class="nav-item">
+                <i class="ri-calendar-check-line"></i>
+                面接管理
+            </a>
+            <a href="#" class="nav-item">
+                <i class="ri-message-3-line"></i>
+                メッセージ
+            </a>
+            <a href="#" class="nav-item">
+                <i class="ri-store-3-line"></i>
+                店舗情報
+            </a>
+            <a href="#" class="nav-item" style="margin-top: auto;">
+                <i class="ri-settings-4-line"></i>
+                設定
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <!-- Card 1 -->
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>新規応募</h3>
+                        <div class="stat-value">12<span style="font-size: 16px; font-weight: normal; margin-left: 4px;">件</span></div>
+                        <div class="stat-sub">今週</div>
+                    </div>
+                    <div class="stat-icon icon-pink">
+                        <i class="ri-user-add-line"></i>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>面接予定</h3>
+                        <div class="stat-value">5<span style="font-size: 16px; font-weight: normal; margin-left: 4px;">件</span></div>
+                        <div class="stat-sub">今週</div>
+                    </div>
+                    <div class="stat-icon icon-blue">
+                        <i class="ri-calendar-event-line"></i>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>採用決定</h3>
+                        <div class="stat-value">3<span style="font-size: 16px; font-weight: normal; margin-left: 4px;">名</span></div>
+                        <div class="stat-sub">今月</div>
+                    </div>
+                    <div class="stat-icon icon-green">
+                        <i class="ri-check-double-line"></i>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>未読メッセージ</h3>
+                        <div class="stat-value">8<span style="font-size: 16px; font-weight: normal; margin-left: 4px;">件</span></div>
+                        <div class="stat-sub" style="color: var(--accent-orange);">要対応</div>
+                    </div>
+                    <div class="stat-icon icon-orange">
+                        <i class="ri-message-2-line"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-layout">
+                <!-- Recent Applicants -->
+                <div class="section-container">
+                    <div class="section-header">
+                        <div class="section-title">最近の応募者</div>
+                        <a href="#" class="see-all">すべて見る <i class="ri-arrow-right-s-line"></i></a>
+                    </div>
+                    
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>応募日時</th>
+                                    <th>名前</th>
+                                    <th>年齢</th>
+                                    <th>診断結果</th>
+                                    <th>ステータス</th>
+                                    <th>アクション</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2026/01/30 14:23</td>
+                                    <td><div class="text-truncate">鈴木 愛理</div></td>
+                                    <td>21歳</td>
+                                    <td style="color: var(--primary-pink); font-weight: 600;">マッチ度 85%</td>
+                                    <td><span class="status-badge badge-orange">未確認</span></td>
+                                    <td><button class="btn-sm">詳細</button></td>
+                                </tr>
+                                <tr>
+                                    <td>2026/01/30 11:15</td>
+                                    <td><div class="text-truncate">田中 美咲</div></td>
+                                    <td>23歳</td>
+                                    <td style="color: var(--primary-pink); font-weight: 600;">マッチ度 92%</td>
+                                    <td><span class="status-badge badge-blue">確認済み</span></td>
+                                    <td><button class="btn-sm">詳細</button></td>
+                                </tr>
+                                <tr>
+                                    <td>2026/01/29 18:45</td>
+                                    <td><div class="text-truncate">高橋 さくら</div></td>
+                                    <td>20歳</td>
+                                    <td style="color: var(--primary-pink); font-weight: 600;">マッチ度 78%</td>
+                                    <td><span class="status-badge badge-green">面接予定</span></td>
+                                    <td><button class="btn-sm">詳細</button></td>
+                                </tr>
+                                <tr>
+                                    <td>2026/01/29 16:30</td>
+                                    <td><div class="text-truncate">伊藤 玲奈</div></td>
+                                    <td>22歳</td>
+                                    <td style="color: var(--primary-pink); font-weight: 600;">マッチ度 88%</td>
+                                    <td><span class="status-badge badge-blue">確認済み</span></td>
+                                    <td><button class="btn-sm">詳細</button></td>
+                                </tr>
+                                <tr>
+                                    <td>2026/01/29 10:20</td>
+                                    <td><div class="text-truncate">渡辺 結衣</div></td>
+                                    <td>24歳</td>
+                                    <td style="color: var(--primary-pink); font-weight: 600;">マッチ度 75%</td>
+                                    <td><span class="status-badge badge-orange">未確認</span></td>
+                                    <td><button class="btn-sm">詳細</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 32px;">
+                        <div class="section-title" style="margin-bottom: 20px;">クイックアクション</div>
+                        <div class="quick-actions-grid">
+                            <button class="qa-btn bg-pink">
+                                <i class="ri-file-edit-line"></i> 求人情報を更新
+                            </button>
+                            <button class="qa-btn bg-blue">
+                                <i class="ri-search-line"></i> 応募者を検索
+                            </button>
+                            <button class="qa-btn bg-soft">
+                                <i class="ri-mail-send-line"></i> メッセージを送信
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Interviews -->
+                <div class="section-container">
+                    <div class="section-header">
+                        <div class="section-title">今週の面接予定</div>
+                        <a href="#" class="see-all">カレンダー <i class="ri-calendar-line"></i></a>
+                    </div>
+
+                    <div class="interview-list">
+                        <!-- Item 1 -->
+                        <div class="interview-card">
+                            <div class="interview-date-row">
+                                <i class="ri-time-line"></i> 1月31日(金) 14:00
+                                <span class="status-badge badge-green" style="margin-left: auto;">確定</span>
+                            </div>
+                            <div class="interview-main">
+                                <div class="candidate-name">藤本 莉子 (21)</div>
+                                <div class="match-rate">85%</div>
+                            </div>
+                            <div class="interview-actions">
+                                <button class="btn-action btn-outline">詳細</button>
+                                <button class="btn-action btn-primary">メッセージ</button>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="interview-card">
+                            <div class="interview-date-row">
+                                <i class="ri-time-line"></i> 2月1日(土) 16:00
+                                <span class="status-badge badge-green" style="margin-left: auto;">確定</span>
+                            </div>
+                            <div class="interview-main">
+                                <div class="candidate-name">後藤 真希 (23)</div>
+                                <div class="match-rate">92%</div>
+                            </div>
+                            <div class="interview-actions">
+                                <button class="btn-action btn-outline">詳細</button>
+                                <button class="btn-action btn-primary">メッセージ</button>
+                            </div>
+                        </div>
+
+                        <!-- Item 3 -->
+                        <div class="interview-card">
+                            <div class="interview-date-row">
+                                <i class="ri-time-line"></i> 2月2日(日) 15:00
+                                <span class="status-badge badge-orange" style="margin-left: auto;">調整中</span>
+                            </div>
+                            <div class="interview-main">
+                                <div class="candidate-name">林 杏奈 (20)</div>
+                                <div class="match-rate">88%</div>
+                            </div>
+                            <div class="interview-actions">
+                                <button class="btn-action btn-outline">詳細</button>
+                                <button class="btn-action btn-primary">メッセージ</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

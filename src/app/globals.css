@@ -1,1 +1,31 @@
 @import "tailwindcss";
+
+:root {
+  /* Primary Colors */
+  --primary: #FF69B4;
+  --primary-light: #FFC0CB;
+  --primary-bg: #FFF0F5;
+
+  /* Secondary Colors */
+  --secondary-blue: #E3F2FD;
+  --secondary-blue-text: #2196F3;
+  --secondary-green: #E8F5E9;
+  --secondary-green-text: #4CAF50;
+  --secondary-purple: #F3E5F5;
+  --secondary-purple-text: #9C27B0;
+
+  /* Text Colors */
+  --text-main: #333333;
+  --text-sub: #888888;
+
+  /* Background */
+  --bg-gray: #F9FAFC;
+
+  /* Shadows */
+  --shadow-card: 0 8px 24px rgba(255, 105, 180, 0.08);
+  --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  /* Border Radius */
+  --radius-card: 20px;
+  --radius-btn: 100px;
+}

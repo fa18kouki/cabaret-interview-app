@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAppSession } from "@/lib/demo-session";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
@@ -15,8 +17,15 @@ const STATUS_TABS: { value: OfferStatus | "ALL"; label: string }[] = [
 ];
 
 export default function OffersPage() {
+  const router = useRouter();
+  const { data: session, status } = useAppSession();
   const [statusFilter, setStatusFilter] = useState<OfferStatus | "ALL">("ALL");
   const utils = trpc.useUtils();
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/login");
+    else if (session && session.user.role !== "CAST") router.push("/store/dashboard");
+  }, [session, status, router]);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     trpc.cast.getOffers.useInfiniteQuery(
@@ -44,12 +53,20 @@ export default function OffersPage() {
     }
   };
 
+  if (status === "loading" || !session || session.user.role !== "CAST") {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">オファー</h1>
 
       {/* ステータスタブ */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {STATUS_TABS.map((tab) => (
           <button
             key={tab.value}
@@ -86,7 +103,7 @@ export default function OffersPage() {
           {offers.map((offer) => (
             <Card key={offer.id}>
               <CardContent className="py-4">
-                <div className="flex items-start gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                   {/* 店舗画像 */}
                   <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
                     {offer.store.photos?.[0] ? (

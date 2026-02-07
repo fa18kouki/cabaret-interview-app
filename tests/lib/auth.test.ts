@@ -19,10 +19,6 @@ vi.mock("@auth/prisma-adapter", () => ({
   PrismaAdapter: vi.fn(() => ({})),
 }));
 
-vi.mock("next-auth/providers/google", () => ({
-  default: vi.fn((config) => ({ id: "google", name: "Google", ...config })),
-}));
-
 vi.mock("next-auth/providers/line", () => ({
   default: vi.fn((config) => ({ id: "line", name: "LINE", ...config })),
 }));
@@ -39,8 +35,6 @@ describe("Auth Configuration", () => {
   beforeEach(() => {
     vi.resetModules();
     // 環境変数のモック
-    process.env.AUTH_GOOGLE_ID = "google-id";
-    process.env.AUTH_GOOGLE_SECRET = "google-secret";
     process.env.AUTH_LINE_ID = "line-id";
     process.env.AUTH_LINE_SECRET = "line-secret";
     process.env.AUTH_TWITTER_ID = "twitter-id";
@@ -60,24 +54,13 @@ describe("Auth Configuration", () => {
     expect(auth.auth).toBeDefined();
   });
 
-  it("should have 4 providers configured (Google, LINE, X, Email)", async () => {
+  it("should have 3 providers configured (LINE, X, Email)", async () => {
     const NextAuth = (await import("next-auth")).default as ReturnType<typeof vi.fn>;
     await import("@/lib/auth");
 
     expect(NextAuth).toHaveBeenCalled();
     const config = NextAuth.mock.calls[0][0];
-    expect(config.providers).toHaveLength(4);
-  });
-
-  it("should include Google provider", async () => {
-    const NextAuth = (await import("next-auth")).default as ReturnType<typeof vi.fn>;
-    await import("@/lib/auth");
-
-    const config = NextAuth.mock.calls[0][0];
-    const googleProvider = config.providers.find(
-      (p: { id: string }) => p.id === "google"
-    );
-    expect(googleProvider).toBeDefined();
+    expect(config.providers).toHaveLength(3);
   });
 
   it("should include LINE provider", async () => {

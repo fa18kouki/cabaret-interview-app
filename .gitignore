@@ -58,3 +58,7 @@ bun.lockb
 .worktrees/
 
 /src/generated/prisma
+
+# Claude Code
+.claude/
+cabaret-interview-app.code-workspace

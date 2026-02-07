@@ -92,6 +92,30 @@ enum CastRank {
   SILVER
   GOLD
   PLATINUM
+  S_RANK // Sランク（最高位）
+}
+
+enum IdVerificationStatus {
+  PENDING   // 未提出
+  SUBMITTED // 提出済み・確認中
+  VERIFIED  // 確認済み
+  REJECTED  // 却下（再提出必要）
+}
+
+enum AlcoholTolerance {
+  NONE     // 飲めない
+  WEAK     // 弱い
+  MODERATE // 普通
+  STRONG   // 強い
+}
+
+enum BusinessType {
+  CABARET   // キャバクラ
+  CLUB      // クラブ
+  LOUNGE    // ラウンジ
+  GIRLS_BAR // ガールズバー
+  SNACK     // スナック
+  OTHER     // その他
 }
 
 model Cast {
@@ -99,33 +123,104 @@ model Cast {
   userId      String   @unique @map("user_id")
   nickname    String
   age         Int
+  birthDate   DateTime? @map("birth_date") // 生年月日（18歳未満排除・マッチング用）
   description String?  @db.Text
   photos      String[] // S3 URLs
 
+  // 連絡先（マッチング後のDM誘導用）
+  instagramId       String? @map("instagram_id")    // InstagramアカウントID
+  lineId            String? @map("line_id")         // LINE ID（友だち追加用の表示ID）
+  lineUserId        String? @unique @map("line_user_id") // LINE公式アカウント 友だち追加時のuserId（プッシュ通知用）
+  currentListingUrl String? @map("current_listing_url") // 現在の在籍URL（情報サイト）
+
+  // 経験・スキル（ランク査定用）
+  totalExperienceYears Int? @map("total_experience_years") // 総経験年数
+  previousHourlyRate   Int? @map("previous_hourly_rate")   // 過去の最高時給（円）
+  monthlySales         Int? @map("monthly_sales")          // 月間売上実績（円）
+  monthlyNominations   Int? @map("monthly_nominations")    // 月間指名本数
+  alcoholTolerance     AlcoholTolerance? @map("alcohol_tolerance") // お酒の強さ
+
   // 希望条件
-  desiredAreas  String[] @map("desired_areas")
-  desiredSalary Int?     @map("desired_salary")
+  desiredAreas         String[] @map("desired_areas")
+  desiredSalary        Int?     @map("desired_salary") // 後方互換のため残す
+  desiredHourlyRate    Int?     @map("desired_hourly_rate")    // 希望時給（円）
+  desiredMonthlyIncome Int?     @map("desired_monthly_income") // 希望月収（円）
+  availableDaysPerWeek Int?     @map("available_days_per_week") // 出勤可能日数（週）
+  preferredAtmosphere  String[] @map("preferred_atmosphere") // 希望の雰囲気（落ち着いた店、ワイワイ系など）
+  preferredClientele   String[] @map("preferred_clientele")  // 希望の客層
+
+  // リスク回避
+  downtimeUntil  DateTime? @map("downtime_until") // ダウンタイム終了予定日（整形等）
+  isAvailableNow Boolean   @default(true) @map("is_available_now") // 即日稼働可能フラグ
+
+  // 自己PR（Sランク認定用）
+  birthdaySales        Int?     @map("birthday_sales")      // 生誕（バースデーイベント）売上実績
+  hasVipClients        Boolean  @default(false) @map("has_vip_clients") // 太客有無（有名人・企業社長等）
+  vipClientDescription String?  @db.Text @map("vip_client_description") // 太客の詳細（任意記述）
+  socialFollowers      Int?     @map("social_followers")    // SNSフォロワー数
 
   // MUST/WANT条件
   mustConditions Json? @map("must_conditions")
   wantConditions Json? @map("want_conditions")
 
   // ステータス
-  idVerified   Boolean  @default(false) @map("id_verified")
-  rank         CastRank @default(UNRANKED)
-  penaltyCount Int      @default(0) @map("penalty_count")
-  isSuspended  Boolean  @default(false) @map("is_suspended")
+  idVerified           Boolean              @default(false) @map("id_verified")
+  idVerificationStatus IdVerificationStatus @default(PENDING) @map("id_verification_status")
+  rank                 CastRank             @default(UNRANKED)
+  penaltyCount         Int                  @default(0) @map("penalty_count")
+  isSuspended          Boolean              @default(false) @map("is_suspended")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // 診断関連
+  diagnosisCompleted   Boolean   @default(false) @map("diagnosis_completed")
+  diagnosisCompletedAt DateTime? @map("diagnosis_completed_at")
+
   // リレーション
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  matches    Match[]
-  offers     Offer[]
-  interviews Interview[]
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches          Match[]
+  offers           Offer[]
+  interviews       Interview[]
+  experiences      CastExperience[]
+  lineLinkTokens   LineLinkToken[]
+  diagnosisSession DiagnosisSession?
 
   @@map("casts")
+}
+
+// ==================== 診断セッション ====================
+
+model DiagnosisSession {
+  id          String    @id @default(cuid())
+  castId      String    @unique @map("cast_id")
+  currentStep String    @default("BASIC_INFO") @map("current_step")
+  answers     Json      @default("{}")
+  isCompleted Boolean   @default(false) @map("is_completed")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  cast Cast @relation(fields: [castId], references: [id], onDelete: Cascade)
+
+  @@map("diagnosis_sessions")
+}
+
+// ==================== キャスト経験 ====================
+
+model CastExperience {
+  id             String       @id @default(cuid())
+  castId         String       @map("cast_id")
+  area           String       // 経験エリア（六本木、銀座など）
+  businessType   BusinessType // 業種
+  durationMonths Int?         @map("duration_months") // 勤務期間（月）
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // リレーション
+  cast Cast @relation(fields: [castId], references: [id], onDelete: Cascade)
+
+  @@map("cast_experiences")
 }
 
 // ==================== 店舗 ====================
@@ -262,6 +357,21 @@ model Message {
   sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@map("messages")
+}
+
+// ==================== LINE連携（公式アカウント） ====================
+
+model LineLinkToken {
+  id       String   @id @default(cuid())
+  castId   String   @map("cast_id")
+  token    String   @unique
+  expiresAt DateTime @map("expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  cast Cast @relation(fields: [castId], references: [id], onDelete: Cascade)
+
+  @@map("line_link_tokens")
 }
 
 // ==================== ペナルティ記録 ====================
