@@ -6,6 +6,7 @@ import { useAppSession } from "@/lib/demo-session";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { ChevronRight } from "lucide-react";
 
 type OfferStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "EXPIRED";
 
@@ -101,7 +102,11 @@ export default function OffersPage() {
       ) : (
         <div className="space-y-4">
           {offers.map((offer) => (
-            <Card key={offer.id}>
+            <Card
+              key={offer.id}
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => router.push(`/offers/${offer.id}`)}
+            >
               <CardContent className="py-4">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                   {/* 店舗画像 */}
@@ -126,25 +131,28 @@ export default function OffersPage() {
                         <h3 className="font-semibold text-gray-900">{offer.store.name}</h3>
                         <p className="text-sm text-gray-500">{offer.store.area}</p>
                       </div>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          offer.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-700"
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            offer.status === "PENDING"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : offer.status === "ACCEPTED"
+                              ? "bg-green-100 text-green-700"
+                              : offer.status === "REJECTED"
+                              ? "bg-gray-100 text-gray-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {offer.status === "PENDING"
+                            ? "未回答"
                             : offer.status === "ACCEPTED"
-                            ? "bg-green-100 text-green-700"
+                            ? "承諾済"
                             : offer.status === "REJECTED"
-                            ? "bg-gray-100 text-gray-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {offer.status === "PENDING"
-                          ? "未回答"
-                          : offer.status === "ACCEPTED"
-                          ? "承諾済"
-                          : offer.status === "REJECTED"
-                          ? "辞退済"
-                          : "期限切れ"}
-                      </span>
+                            ? "辞退済"
+                            : "期限切れ"}
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      </div>
                     </div>
 
                     <p className="text-sm text-gray-600 mt-2 line-clamp-2">
@@ -159,7 +167,10 @@ export default function OffersPage() {
                       <div className="flex gap-2 mt-3">
                         <Button
                           size="sm"
-                          onClick={() => handleRespond(offer.id, true)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRespond(offer.id, true);
+                          }}
                           isLoading={respondToOffer.isPending}
                         >
                           承諾する
@@ -167,7 +178,10 @@ export default function OffersPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleRespond(offer.id, false)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRespond(offer.id, false);
+                          }}
                           isLoading={respondToOffer.isPending}
                         >
                           辞退する
