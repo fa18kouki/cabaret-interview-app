@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { useDemoSession } from "@/lib/demo-session";
+import { getMockCastsForSearch } from "@/lib/mock-data";
 
 const AREAS = [
   "新宿",
@@ -20,6 +22,7 @@ const AREAS = [
 
 const RANKS = [
   { value: "", label: "すべて" },
+  { value: "S_RANK", label: "Sランク" },
   { value: "PLATINUM", label: "プラチナ" },
   { value: "GOLD", label: "ゴールド" },
   { value: "SILVER", label: "シルバー" },
@@ -27,25 +30,32 @@ const RANKS = [
   { value: "UNRANKED", label: "ランクなし" },
 ];
 
+type CastRank = "UNRANKED" | "BRONZE" | "SILVER" | "GOLD" | "PLATINUM" | "S_RANK";
+
 export default function CastsSearchPage() {
+  const { session: demoSession } = useDemoSession();
+  const isDemo = !!demoSession;
+
   const [filters, setFilters] = useState({
     area: "",
     minAge: undefined as number | undefined,
     maxAge: undefined as number | undefined,
-    rank: "" as "" | "UNRANKED" | "BRONZE" | "SILVER" | "GOLD" | "PLATINUM",
+    rank: "" as "" | CastRank,
   });
   const [selectedCast, setSelectedCast] = useState<string | null>(null);
   const [offerMessage, setOfferMessage] = useState("");
 
+  // 実DB モード
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     trpc.store.searchCasts.useInfiniteQuery(
       {
         ...filters,
-        rank: filters.rank || undefined,
+        rank: (filters.rank || undefined) as "UNRANKED" | "BRONZE" | "SILVER" | "GOLD" | "PLATINUM" | undefined,
         limit: 20,
       },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
+        enabled: !isDemo,
       }
     );
 
@@ -62,16 +72,38 @@ export default function CastsSearchPage() {
 
   const handleSendOffer = () => {
     if (!selectedCast || !offerMessage.trim()) return;
+    if (isDemo) {
+      alert("デモモードではオファー送信はできません");
+      setSelectedCast(null);
+      setOfferMessage("");
+      return;
+    }
     sendOffer.mutate({
       castId: selectedCast,
       message: offerMessage,
     });
   };
 
-  const casts = data?.pages.flatMap((page) => page.casts) ?? [];
+  // デモモード: モックデータをフィルタリング
+  const mockCasts = useMemo(() => {
+    if (!isDemo) return [];
+    const all = getMockCastsForSearch();
+    return all.filter((cast) => {
+      if (filters.area && !cast.desiredAreas.includes(filters.area)) return false;
+      if (filters.minAge && cast.age < filters.minAge) return false;
+      if (filters.maxAge && cast.age > filters.maxAge) return false;
+      if (filters.rank && cast.rank !== filters.rank) return false;
+      return true;
+    });
+  }, [isDemo, filters]);
+
+  const casts = isDemo
+    ? mockCasts
+    : (data?.pages.flatMap((page) => page.casts) ?? []);
 
   const getRankBadge = (rank: string) => {
     const styles: Record<string, string> = {
+      S_RANK: "bg-pink-100 text-pink-700",
       PLATINUM: "bg-purple-100 text-purple-700",
       GOLD: "bg-yellow-100 text-yellow-700",
       SILVER: "bg-gray-200 text-gray-700",
@@ -79,6 +111,7 @@ export default function CastsSearchPage() {
       UNRANKED: "bg-gray-100 text-gray-500",
     };
     const labels: Record<string, string> = {
+      S_RANK: "Sランク",
       PLATINUM: "プラチナ",
       GOLD: "ゴールド",
       SILVER: "シルバー",
@@ -177,7 +210,7 @@ export default function CastsSearchPage() {
       </Card>
 
       {/* 検索結果 */}
-      {isLoading ? (
+      {!isDemo && isLoading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
@@ -251,7 +284,7 @@ export default function CastsSearchPage() {
             ))}
           </div>
 
-          {hasNextPage && (
+          {!isDemo && hasNextPage && (
             <div className="flex justify-center">
               <Button
                 variant="outline"
