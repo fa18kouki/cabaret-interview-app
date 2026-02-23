@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSession } from "@/lib/demo-session";
 import { Search, SlidersHorizontal } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getMockStoresForSearch } from "@/lib/mock-data";
 import { TagFilter } from "@/components/cast/TagFilter";
 import { StoreCard } from "@/components/cast/StoreCard";
 
-// ローカル画像パス
 const STORE_IMAGES = [
   "/service-scene-05.png",
   "/service-scene-06.png",
@@ -49,21 +50,19 @@ export default function StoresPage() {
   if (status === "loading" || !session || session.user.role !== "CAST") {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
+        <Spinner />
       </div>
     );
   }
 
   const allStores = getMockStoresForSearch();
 
-  // フィルタリング
   const filteredStores = allStores.filter((store) => {
     const matchesSearch =
       searchQuery === "" ||
       store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       store.area.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // タグでフィルタリング（デモ用に簡易実装）
     const matchesTag =
       selectedTag === "すべて" ||
       (selectedTag === "未経験歓迎" &&
@@ -81,9 +80,7 @@ export default function StoresPage() {
 
   return (
     <div className="space-y-4">
-      {/* 検索ヘッダー */}
       <div className="sticky top-0 bg-(--bg-gray) pt-2 pb-3 -mx-4 px-4 z-10">
-        {/* 検索バー */}
         <div className="flex gap-2.5 mb-4">
           <div className="flex-1 bg-gray-100 rounded-xl px-4 py-3 flex items-center gap-2.5">
             <Search className="w-5 h-5 text-(--text-sub)" />
@@ -100,7 +97,6 @@ export default function StoresPage() {
           </button>
         </div>
 
-        {/* タグフィルター */}
         <TagFilter
           tags={FILTER_TAGS}
           selectedTag={selectedTag}
@@ -108,12 +104,9 @@ export default function StoresPage() {
         />
       </div>
 
-      {/* 店舗一覧 */}
       <div className="space-y-4 pb-4">
         {filteredStores.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-(--text-sub)">該当する店舗が見つかりませんでした</p>
-          </div>
+          <EmptyState icon={Search} title="該当する店舗が見つかりませんでした" />
         ) : (
           filteredStores.map((store, index) => (
             <StoreCard

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAppSession } from "@/lib/demo-session";
 import { Bot, Store, MessageSquare, UserCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { createMockCastProfile, getMockStoresForSearch } from "@/lib/mock-data";
 import { QuickActionCard } from "@/components/cast/QuickActionCard";
 import { StoreCard } from "@/components/cast/StoreCard";
@@ -33,7 +34,7 @@ export default function CastDashboard() {
   if (status === "loading" || !session || session.user.role !== "CAST") {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
+        <Spinner />
       </div>
     );
   }

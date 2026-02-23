@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAppSession } from "@/lib/demo-session";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { trpc } from "@/lib/trpc";
 import {
   ChevronLeft,
@@ -12,7 +13,6 @@ import {
   Clock,
   DollarSign,
   Gift,
-  Building2,
   ShieldCheck,
   AlertTriangle,
   CheckCircle2,
@@ -54,7 +54,7 @@ export default function OfferDetailPage() {
   if (status === "loading" || !session || session.user.role !== "CAST") {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
+        <Spinner />
       </div>
     );
   }
@@ -62,7 +62,7 @@ export default function OfferDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-(--primary)" />
+        <Spinner />
       </div>
     );
   }
@@ -72,13 +72,13 @@ export default function OfferDetailPage() {
       <div className="space-y-4">
         <button
           onClick={() => router.push("/offers")}
-          className="flex items-center gap-1 text-gray-500 hover:text-gray-700"
+          className="flex items-center gap-1 text-(--text-sub) hover:text-(--text-main)"
         >
           <ChevronLeft className="w-5 h-5" />
           <span className="text-sm">オファー一覧</span>
         </button>
         <div className="text-center py-12">
-          <p className="text-gray-500">オファーが見つかりません</p>
+          <p className="text-(--text-sub)">オファーが見つかりません</p>
         </div>
       </div>
     );
@@ -105,18 +105,16 @@ export default function OfferDetailPage() {
 
   return (
     <div className="space-y-6 pb-28">
-      {/* ヘッダー */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push("/offers")}
-          className="flex items-center gap-1 text-gray-500 hover:text-gray-700"
+          className="flex items-center gap-1 text-(--text-sub) hover:text-(--text-main)"
         >
           <ChevronLeft className="w-5 h-5" />
           <span className="text-sm">オファー一覧</span>
         </button>
       </div>
 
-      {/* 店舗写真ギャラリー */}
       {offer.store.photos && offer.store.photos.length > 0 && (
         <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
           {offer.store.photos.map((photo, index) => (
@@ -134,15 +132,14 @@ export default function OfferDetailPage() {
         </div>
       )}
 
-      {/* 店舗ヘッダー */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-xl font-bold text-gray-900">{offer.store.name}</h1>
+          <h1 className="text-xl font-bold text-(--text-main)">{offer.store.name}</h1>
           {offer.store.isVerified && (
-            <ShieldCheck className="w-5 h-5 text-blue-500" />
+            <ShieldCheck className="w-5 h-5 text-(--primary)" />
           )}
         </div>
-        <div className="flex items-center gap-1.5 text-gray-500 text-sm">
+        <div className="flex items-center gap-1.5 text-(--text-sub) text-sm">
           <MapPin className="w-4 h-4" />
           <span>{offer.store.area}</span>
           {offer.store.address && (
@@ -151,11 +148,10 @@ export default function OfferDetailPage() {
         </div>
       </div>
 
-      {/* オファーメッセージ */}
       <Card>
         <CardContent className="py-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-gray-900 pl-2.5 border-l-4 border-(--primary)">
+            <h2 className="text-base font-bold text-(--text-main) pl-2.5 border-l-4 border-(--primary)">
               オファーメッセージ
             </h2>
             <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${statusInfo.className}`}>
@@ -193,7 +189,6 @@ export default function OfferDetailPage() {
         </CardContent>
       </Card>
 
-      {/* 店舗情報セクション */}
       <div className="space-y-5">
         {offer.store.description && (
           <section>
@@ -250,7 +245,6 @@ export default function OfferDetailPage() {
         )}
       </div>
 
-      {/* 固定フッター CTA */}
       {canRespond && (
         <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-white px-4 sm:px-6 py-3 sm:py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex gap-3 z-40">
           <Button
@@ -271,7 +265,6 @@ export default function OfferDetailPage() {
         </div>
       )}
 
-      {/* 承諾/辞退済みバナー */}
       {offer.status === "ACCEPTED" && (
         <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-green-50 px-4 py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-40">
           <div className="flex items-center justify-center gap-2 text-green-700 font-medium">
