@@ -1,15 +1,9 @@
 // デモモード用モックデータ
 
-export const MOCK_AREAS = [
-  "新宿",
-  "渋谷",
-  "六本木",
-  "銀座",
-  "池袋",
-  "歌舞伎町",
-  "赤坂",
-  "恵比寿",
-];
+import { AREAS } from "@/lib/constants";
+
+/** @deprecated AREAS を直接使用してください */
+export const MOCK_AREAS = AREAS;
 
 // キャストプロフィール
 export function createMockCastProfile(userId: string) {
@@ -201,7 +195,108 @@ export function getMockStoresForSearch() {
   }));
 }
 
+// 店舗向けマッチング一覧（デモモード用）
+export type MatchStatus = "ACCEPTED" | "PENDING" | "REJECTED";
+
+export function getMockMatchesForStorePage(storeUserId: string) {
+  const matchData: {
+    nickname: string;
+    age: number;
+    rank: string;
+    status: MatchStatus;
+    daysSinceMatch: number;
+    lastMessage?: string;
+  }[] = [
+    {
+      nickname: "あいり",
+      age: 22,
+      rank: "GOLD",
+      status: "ACCEPTED",
+      daysSinceMatch: 1,
+      lastMessage: "ぜひ面接よろしくお願いします！",
+    },
+    {
+      nickname: "みさき",
+      age: 24,
+      rank: "PLATINUM",
+      status: "ACCEPTED",
+      daysSinceMatch: 3,
+      lastMessage: "体験入店の日程を相談させてください",
+    },
+    {
+      nickname: "さくら",
+      age: 20,
+      rank: "SILVER",
+      status: "ACCEPTED",
+      daysSinceMatch: 5,
+    },
+    {
+      nickname: "れな",
+      age: 23,
+      rank: "GOLD",
+      status: "PENDING",
+      daysSinceMatch: 0,
+    },
+    {
+      nickname: "ゆい",
+      age: 21,
+      rank: "BRONZE",
+      status: "PENDING",
+      daysSinceMatch: 1,
+    },
+    {
+      nickname: "まお",
+      age: 25,
+      rank: "S_RANK",
+      status: "PENDING",
+      daysSinceMatch: 2,
+    },
+    {
+      nickname: "りこ",
+      age: 26,
+      rank: "SILVER",
+      status: "REJECTED",
+      daysSinceMatch: 7,
+    },
+    {
+      nickname: "ひなた",
+      age: 19,
+      rank: "UNRANKED",
+      status: "REJECTED",
+      daysSinceMatch: 10,
+    },
+  ];
+
+  return matchData.map((m, i) => ({
+    id: `match_store_${i}`,
+    storeId: `store_${storeUserId}`,
+    castId: `cast_demo_${i}`,
+    status: m.status,
+    createdAt: new Date(Date.now() - m.daysSinceMatch * 24 * 60 * 60 * 1000),
+    updatedAt: new Date(Date.now() - m.daysSinceMatch * 24 * 60 * 60 * 1000),
+    cast: {
+      id: `cast_demo_${i}`,
+      nickname: m.nickname,
+      age: m.age,
+      rank: m.rank,
+      photos: [CAST_PLACEHOLDER_IMAGES[i % CAST_PLACEHOLDER_IMAGES.length]!],
+    },
+    lastMessage: m.lastMessage ?? null,
+  }));
+}
+
 // キャスト検索結果（店舗用 — Castスキーマ準拠）
+const CAST_PLACEHOLDER_IMAGES = [
+  "/service-scene-01.png",
+  "/service-scene-02.png",
+  "/service-scene-03.png",
+  "/service-scene-04.png",
+  "/service-scene-10.png",
+  "/gold-dress-back.png",
+  "/light-blue-dress-service.png",
+  "/navy-dress-silhouette.png",
+];
+
 export function getMockCastsForSearch() {
   const castData = [
     {
@@ -306,7 +401,7 @@ export function getMockCastsForSearch() {
     id: `cast_mock_${i}`,
     nickname: cast.nickname,
     age: cast.age,
-    photos: [] as string[],
+    photos: [CAST_PLACEHOLDER_IMAGES[i % CAST_PLACEHOLDER_IMAGES.length]!],
     desiredAreas: cast.desiredAreas,
     rank: cast.rank,
     description: cast.description,
@@ -316,6 +411,232 @@ export function getMockCastsForSearch() {
     monthlyNominations: cast.monthlyNominations,
     alcoholTolerance: cast.alcoholTolerance,
   }));
+}
+
+// チャット用モックデータ（店舗・キャスト共用）
+export function getMockChatMessages(matchId: string, viewerRole: "STORE" | "CAST") {
+  const CONVERSATIONS: Record<string, { content: string; fromCast: boolean; minutesAgo: number }[]> = {
+    match_store_0: [
+      { content: "オファーありがとうございます！興味があります。", fromCast: true, minutesAgo: 180 },
+      { content: "ありがとうございます！ぜひ一度お話しさせてください。ご都合の良い日はありますか？", fromCast: false, minutesAgo: 170 },
+      { content: "来週の火曜か水曜の午後なら空いています！", fromCast: true, minutesAgo: 150 },
+      { content: "では火曜日の14時はいかがですか？", fromCast: false, minutesAgo: 140 },
+      { content: "大丈夫です！場所はお店でよろしいですか？", fromCast: true, minutesAgo: 130 },
+      { content: "はい、お店でお待ちしています。住所はこちらです → 東京都新宿区歌舞伎町1-XX-XX", fromCast: false, minutesAgo: 120 },
+      { content: "ぜひ面接よろしくお願いします！", fromCast: true, minutesAgo: 110 },
+    ],
+    match_store_1: [
+      { content: "はじめまして。オファーの内容を拝見しました。", fromCast: true, minutesAgo: 300 },
+      { content: "はじめまして！みさきさんのプロフィール拝見しました。ぜひ一度お会いしたいです。", fromCast: false, minutesAgo: 290 },
+      { content: "ありがとうございます。時給や勤務条件について詳しくお聞きしてもいいですか？", fromCast: true, minutesAgo: 280 },
+      { content: "もちろんです！時給は6,000円〜で、経験に応じて優遇します。週3日からOKです。", fromCast: false, minutesAgo: 270 },
+      { content: "体験入店の日程を相談させてください", fromCast: true, minutesAgo: 60 },
+    ],
+    match_store_2: [
+      { content: "こんにちは！マッチングありがとうございます！", fromCast: true, minutesAgo: 500 },
+      { content: "こんにちは！さくらさん、よろしくお願いします。", fromCast: false, minutesAgo: 490 },
+    ],
+  };
+
+  const msgs = CONVERSATIONS[matchId] ?? [
+    { content: "マッチングありがとうございます！", fromCast: true, minutesAgo: 60 },
+    { content: "こちらこそ、よろしくお願いします！", fromCast: false, minutesAgo: 50 },
+  ];
+
+  const now = Date.now();
+  return msgs.map((m, i) => ({
+    id: `msg_${matchId}_${i}`,
+    content: m.content,
+    matchId,
+    sender: {
+      id: m.fromCast ? `cast_sender_${matchId}` : `store_sender_${matchId}`,
+      role: m.fromCast ? "CAST" : "STORE",
+    },
+    createdAt: new Date(now - m.minutesAgo * 60 * 1000),
+  }));
+}
+
+export function getMockChatPartner(matchId: string, viewerRole: "STORE" | "CAST") {
+  if (viewerRole === "STORE") {
+    const castMap: Record<string, { nickname: string; age: number; rank: string; photoIdx: number }> = {
+      match_store_0: { nickname: "あいり", age: 22, rank: "GOLD", photoIdx: 0 },
+      match_store_1: { nickname: "みさき", age: 24, rank: "PLATINUM", photoIdx: 1 },
+      match_store_2: { nickname: "さくら", age: 20, rank: "SILVER", photoIdx: 2 },
+    };
+    const c = castMap[matchId] ?? { nickname: "キャスト", age: 22, rank: "SILVER", photoIdx: 3 };
+    return {
+      id: `cast_sender_${matchId}`,
+      nickname: c.nickname,
+      age: c.age,
+      rank: c.rank,
+      photos: [CAST_PLACEHOLDER_IMAGES[c.photoIdx % CAST_PLACEHOLDER_IMAGES.length]!],
+    };
+  }
+  // キャスト側: 店舗情報を返す
+  return {
+    id: `store_sender_${matchId}`,
+    name: "デモ店舗",
+    area: "新宿",
+    photos: [] as string[],
+  };
+}
+
+// 面接管理ページ用
+export type InterviewManagementStatus = "SCHEDULED" | "COMPLETED" | "NO_SHOW" | "CANCELLED";
+
+function addDaysFromNow(days: number, hours = 14): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  d.setHours(hours, 0, 0, 0);
+  return d;
+}
+
+export function createMockInterviewsForStore(userId: string) {
+  return [
+    {
+      id: "interview_1",
+      offerId: "offer_1",
+      castId: "cast_demo_0",
+      storeId: `store_${userId}`,
+      scheduledAt: addDaysFromNow(1, 14),
+      status: "SCHEDULED" as InterviewManagementStatus,
+      notes: "体験入店希望。送迎必要。",
+      cast: { id: "cast_demo_0", nickname: "あいり", photos: [] as string[] },
+      store: { id: `store_${userId}`, name: "デモ店舗", area: "新宿" },
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+    },
+    {
+      id: "interview_2",
+      offerId: "offer_2",
+      castId: "cast_demo_1",
+      storeId: `store_${userId}`,
+      scheduledAt: addDaysFromNow(3, 16),
+      status: "SCHEDULED" as InterviewManagementStatus,
+      notes: null,
+      cast: { id: "cast_demo_1", nickname: "みさき", photos: [] as string[] },
+      store: { id: `store_${userId}`, name: "デモ店舗", area: "新宿" },
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
+    },
+    {
+      id: "interview_3",
+      offerId: "offer_3",
+      castId: "cast_demo_2",
+      storeId: `store_${userId}`,
+      scheduledAt: addDaysFromNow(-3, 15),
+      status: "COMPLETED" as InterviewManagementStatus,
+      notes: "採用決定。来週から出勤予定。",
+      cast: { id: "cast_demo_2", nickname: "さくら", photos: [] as string[] },
+      store: { id: `store_${userId}`, name: "デモ店舗", area: "新宿" },
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 96),
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 72),
+    },
+    {
+      id: "interview_4",
+      offerId: "offer_1",
+      castId: "cast_demo_3",
+      storeId: `store_${userId}`,
+      scheduledAt: addDaysFromNow(-5, 14),
+      status: "NO_SHOW" as InterviewManagementStatus,
+      notes: "連絡なし。ペナルティ付与済み。",
+      cast: { id: "cast_demo_3", nickname: "れな", photos: [] as string[] },
+      store: { id: `store_${userId}`, name: "デモ店舗", area: "新宿" },
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 144),
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 120),
+    },
+    {
+      id: "interview_5",
+      offerId: "offer_2",
+      castId: "cast_demo_4",
+      storeId: `store_${userId}`,
+      scheduledAt: addDaysFromNow(-2, 13),
+      status: "CANCELLED" as InterviewManagementStatus,
+      notes: "キャスト都合によりキャンセル。",
+      cast: { id: "cast_demo_4", nickname: "ゆい", photos: [] as string[] },
+      store: { id: `store_${userId}`, name: "デモ店舗", area: "新宿" },
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72),
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
+    },
+  ];
+}
+
+// 設定ページ用
+export function createMockStoreSettings(userId: string) {
+  return {
+    notifications: {
+      newApplicant: true,
+      offerResponse: true,
+      interviewReminder: true,
+      messageReceived: false,
+      systemAnnouncement: true,
+    },
+    account: {
+      email: `store_${userId}@demo.local`,
+      phone: "090-1234-5678",
+    },
+  };
+}
+
+// サブスクリプション用
+export const SUBSCRIPTION_PLANS = [
+  {
+    id: "FREE" as const,
+    name: "フリー",
+    price: 0,
+    priceLabel: "¥0",
+    description: "まずはお試しで始めたい店舗向け",
+    features: [
+      "月5件までオファー送信",
+      "基本的なキャスト検索",
+      "メッセージ機能",
+    ],
+  },
+  {
+    id: "BASIC" as const,
+    name: "ベーシック",
+    price: 9800,
+    priceLabel: "¥9,800",
+    description: "本格的に採用活動を行う店舗向け",
+    features: [
+      "月30件までオファー送信",
+      "詳細なキャスト検索・フィルター",
+      "メッセージ機能",
+      "面接管理機能",
+      "応募者分析レポート",
+    ],
+  },
+  {
+    id: "PREMIUM" as const,
+    name: "プレミアム",
+    price: 29800,
+    priceLabel: "¥29,800",
+    description: "大量採用・複数店舗を運営する企業向け",
+    features: [
+      "オファー送信無制限",
+      "AI マッチング優先表示",
+      "詳細なキャスト検索・フィルター",
+      "メッセージ機能",
+      "面接管理機能",
+      "応募者分析レポート",
+      "優先サポート",
+      "複数店舗管理",
+    ],
+    recommended: true,
+  },
+] as const;
+
+export type SubscriptionPlanId = (typeof SUBSCRIPTION_PLANS)[number]["id"];
+
+export function createMockSubscription(userId: string) {
+  return {
+    id: `sub_${userId}`,
+    storeId: `store_${userId}`,
+    plan: "FREE" as SubscriptionPlanId,
+    status: "ACTIVE" as const,
+    currentPeriodStart: new Date(),
+    currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  };
 }
 
 // 店長用: 最近の応募者（診断結果・ステータス付き）
