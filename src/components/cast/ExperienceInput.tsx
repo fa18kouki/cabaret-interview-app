@@ -1,14 +1,9 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
+import { AREAS, BUSINESS_TYPES, type BusinessType } from "@/lib/constants";
 
-export type BusinessType =
-  | "CABARET"
-  | "CLUB"
-  | "LOUNGE"
-  | "GIRLS_BAR"
-  | "SNACK"
-  | "OTHER";
+export type { BusinessType };
 
 export interface Experience {
   area: string;
@@ -21,32 +16,6 @@ interface ExperienceInputProps {
   onExperiencesChange: (experiences: Experience[]) => void;
 }
 
-const AREAS = [
-  "六本木",
-  "銀座",
-  "歌舞伎町",
-  "渋谷",
-  "新宿",
-  "池袋",
-  "上野",
-  "錦糸町",
-  "横浜",
-  "大阪・北新地",
-  "大阪・ミナミ",
-  "名古屋",
-  "福岡・中洲",
-  "札幌・すすきの",
-  "その他",
-];
-
-const BUSINESS_TYPES: { value: BusinessType; label: string }[] = [
-  { value: "CABARET", label: "キャバクラ" },
-  { value: "CLUB", label: "クラブ" },
-  { value: "LOUNGE", label: "ラウンジ" },
-  { value: "GIRLS_BAR", label: "ガールズバー" },
-  { value: "SNACK", label: "スナック" },
-  { value: "OTHER", label: "その他" },
-];
 
 export function ExperienceInput({
   experiences,

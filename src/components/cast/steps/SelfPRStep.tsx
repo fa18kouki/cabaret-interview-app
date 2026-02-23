@@ -116,7 +116,7 @@ export function SelfPRStep({ data, onDataChange }: SelfPRStepProps) {
 
         <div>
           <label className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-700">
-            <Share2 className="h-4 w-4 text-blue-500" />
+            <Share2 className="h-4 w-4 text-(--primary)" />
             SNSフォロワー数
           </label>
           <div className="flex items-center gap-2">

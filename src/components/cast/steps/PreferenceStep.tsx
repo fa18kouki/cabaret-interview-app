@@ -1,27 +1,12 @@
 "use client";
 
 import type { ProfileFormData } from "../ProfileWizard";
+import { AREAS } from "@/lib/constants";
 
 interface PreferenceStepProps {
   data: ProfileFormData;
   onDataChange: (data: Partial<ProfileFormData>) => void;
 }
-
-const AREAS = [
-  "六本木",
-  "銀座",
-  "歌舞伎町",
-  "渋谷",
-  "新宿",
-  "池袋",
-  "上野",
-  "錦糸町",
-  "横浜",
-  "大阪",
-  "名古屋",
-  "福岡",
-  "札幌",
-];
 
 const ATMOSPHERES = [
   "落ち着いた高級店",
