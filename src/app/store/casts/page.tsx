@@ -3,22 +3,15 @@
 import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { EmptyState } from "@/components/ui/empty-state";
+import { RankBadge } from "@/components/ui/rank-badge";
+import { CastCard } from "@/components/store/cast-card";
 import { trpc } from "@/lib/trpc";
 import { useDemoSession } from "@/lib/demo-session";
 import { getMockCastsForSearch } from "@/lib/mock-data";
-
-const AREAS = [
-  "新宿",
-  "歌舞伎町",
-  "渋谷",
-  "六本木",
-  "銀座",
-  "池袋",
-  "横浜",
-  "名古屋",
-  "大阪",
-  "福岡",
-];
+import { Search, X, Wine } from "lucide-react";
+import { AREAS } from "@/lib/constants";
 
 const RANKS = [
   { value: "", label: "すべて" },
@@ -30,7 +23,16 @@ const RANKS = [
   { value: "UNRANKED", label: "ランクなし" },
 ];
 
+const ALCOHOL_LABELS: Record<string, string> = {
+  STRONG: "強い",
+  MODERATE: "普通",
+  WEAK: "弱い",
+  NONE: "飲めない",
+};
+
 type CastRank = "UNRANKED" | "BRONZE" | "SILVER" | "GOLD" | "PLATINUM" | "S_RANK";
+
+type CastData = ReturnType<typeof getMockCastsForSearch>[number];
 
 export default function CastsSearchPage() {
   const { session: demoSession } = useDemoSession();
@@ -43,9 +45,9 @@ export default function CastsSearchPage() {
     rank: "" as "" | CastRank,
   });
   const [selectedCast, setSelectedCast] = useState<string | null>(null);
+  const [detailCast, setDetailCast] = useState<CastData | null>(null);
   const [offerMessage, setOfferMessage] = useState("");
 
-  // 実DB モード
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     trpc.store.searchCasts.useInfiniteQuery(
       {
@@ -84,7 +86,6 @@ export default function CastsSearchPage() {
     });
   };
 
-  // デモモード: モックデータをフィルタリング
   const mockCasts = useMemo(() => {
     if (!isDemo) return [];
     const all = getMockCastsForSearch();
@@ -101,47 +102,27 @@ export default function CastsSearchPage() {
     ? mockCasts
     : (data?.pages.flatMap((page) => page.casts) ?? []);
 
-  const getRankBadge = (rank: string) => {
-    const styles: Record<string, string> = {
-      S_RANK: "bg-pink-100 text-pink-700",
-      PLATINUM: "bg-purple-100 text-purple-700",
-      GOLD: "bg-yellow-100 text-yellow-700",
-      SILVER: "bg-gray-200 text-gray-700",
-      BRONZE: "bg-orange-100 text-orange-700",
-      UNRANKED: "bg-gray-100 text-gray-500",
-    };
-    const labels: Record<string, string> = {
-      S_RANK: "Sランク",
-      PLATINUM: "プラチナ",
-      GOLD: "ゴールド",
-      SILVER: "シルバー",
-      BRONZE: "ブロンズ",
-      UNRANKED: "ランクなし",
-    };
-    return (
-      <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles[rank] ?? styles.UNRANKED}`}>
-        {labels[rank] ?? "ランクなし"}
-      </span>
-    );
+  const handleDetail = (castId: string) => {
+    const cast = casts.find((c) => c.id === castId);
+    if (cast) setDetailCast(cast as CastData);
   };
 
   return (
     <div className="space-y-6">
-      {/* ヘッダー */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">キャスト検索</h1>
-        <p className="text-gray-600 mt-1">条件に合ったキャストを探してオファーを送りましょう</p>
+        <h1 className="text-2xl font-bold text-(--text-main)">キャスト検索</h1>
+        <p className="text-(--text-sub) mt-1">条件に合ったキャストを探してオファーを送りましょう</p>
       </div>
 
       {/* フィルター */}
       <Card className="p-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">エリア</label>
+            <label className="block text-sm font-medium text-(--text-main) mb-1">エリア</label>
             <select
               value={filters.area}
               onChange={(e) => setFilters({ ...filters, area: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--primary)"
             >
               <option value="">すべて</option>
               {AREAS.map((area) => (
@@ -153,7 +134,7 @@ export default function CastsSearchPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">年齢</label>
+            <label className="block text-sm font-medium text-(--text-main) mb-1">年齢</label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -167,9 +148,9 @@ export default function CastsSearchPage() {
                 placeholder="18"
                 min={18}
                 max={99}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--primary)"
               />
-              <span className="text-gray-500">〜</span>
+              <span className="text-(--text-sub)">〜</span>
               <input
                 type="number"
                 value={filters.maxAge ?? ""}
@@ -182,13 +163,13 @@ export default function CastsSearchPage() {
                 placeholder="99"
                 min={18}
                 max={99}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--primary)"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">ランク</label>
+            <label className="block text-sm font-medium text-(--text-main) mb-1">ランク</label>
             <select
               value={filters.rank}
               onChange={(e) =>
@@ -197,7 +178,7 @@ export default function CastsSearchPage() {
                   rank: e.target.value as typeof filters.rank,
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--primary)"
             >
               {RANKS.map((rank) => (
                 <option key={rank.value} value={rank.value}>
@@ -209,78 +190,31 @@ export default function CastsSearchPage() {
         </div>
       </Card>
 
-      {/* 検索結果 */}
+      {/* 結果 */}
       {!isDemo && isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+          <Spinner />
         </div>
       ) : casts.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <p className="text-gray-600">条件に合うキャストが見つかりませんでした</p>
-          <p className="text-sm text-gray-500 mt-1">検索条件を変更してみてください</p>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="条件に合うキャストが見つかりませんでした"
+          description="検索条件を変更してみてください"
+        />
       ) : (
         <>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <p className="text-sm text-(--text-sub)">
+            {casts.length}件のキャストが見つかりました
+          </p>
+
+          <div className="grid lg:grid-cols-2 gap-4">
             {casts.map((cast) => (
-              <Card key={cast.id} className="overflow-hidden">
-                <div className="aspect-[3/4] bg-gray-200 relative">
-                  {cast.photos?.[0] ? (
-                    <img
-                      src={cast.photos[0]}
-                      alt={cast.nickname}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                  )}
-                  <div className="absolute top-2 right-2">
-                    {getRankBadge(cast.rank)}
-                  </div>
-                </div>
-
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900">{cast.nickname}</h3>
-                    <span className="text-sm text-gray-500">{cast.age}歳</span>
-                  </div>
-
-                  {cast.desiredAreas && cast.desiredAreas.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {cast.desiredAreas.slice(0, 3).map((area) => (
-                        <span
-                          key={area}
-                          className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
-                        >
-                          {area}
-                        </span>
-                      ))}
-                      {cast.desiredAreas.length > 3 && (
-                        <span className="px-2 py-0.5 text-gray-400 text-xs">
-                          +{cast.desiredAreas.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={() => setSelectedCast(cast.id)}
-                    className="w-full"
-                    size="sm"
-                  >
-                    オファーを送る
-                  </Button>
-                </div>
-              </Card>
+              <CastCard
+                key={cast.id}
+                cast={cast}
+                onDetail={handleDetail}
+                onOffer={setSelectedCast}
+              />
             ))}
           </div>
 
@@ -298,16 +232,149 @@ export default function CastsSearchPage() {
         </>
       )}
 
+      {/* 詳細モーダル */}
+      {detailCast && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            {/* ヘッダー画像 */}
+            <div className="relative aspect-[16/9] bg-gray-200">
+              {detailCast.photos[0] ? (
+                <img
+                  src={detailCast.photos[0]}
+                  alt={detailCast.nickname}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  No Photo
+                </div>
+              )}
+              <button
+                onClick={() => setDetailCast(null)}
+                className="absolute top-3 right-3 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center text-white hover:bg-black/60 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* 名前・年齢・ランク */}
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-(--text-main)">
+                  {detailCast.nickname}
+                </h2>
+                <span className="text-(--text-sub)">{detailCast.age}歳</span>
+                <RankBadge rank={detailCast.rank} size="md" />
+              </div>
+
+              {/* 基本情報 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-(--bg-gray) rounded-lg p-3">
+                  <p className="text-xs text-(--text-sub) mb-0.5">経験年数</p>
+                  <p className="text-sm font-medium text-(--text-main)">
+                    {detailCast.totalExperienceYears != null && detailCast.totalExperienceYears > 0
+                      ? `${detailCast.totalExperienceYears}年`
+                      : "未経験"}
+                  </p>
+                </div>
+                <div className="bg-(--bg-gray) rounded-lg p-3">
+                  <p className="text-xs text-(--text-sub) mb-0.5">前職時給</p>
+                  <p className="text-sm font-medium text-(--text-main)">
+                    {detailCast.previousHourlyRate != null
+                      ? `¥${detailCast.previousHourlyRate.toLocaleString()}`
+                      : "−"}
+                  </p>
+                </div>
+                {detailCast.monthlySales != null && (
+                  <div className="bg-(--bg-gray) rounded-lg p-3">
+                    <p className="text-xs text-(--text-sub) mb-0.5">月間売上</p>
+                    <p className="text-sm font-medium text-(--text-main)">
+                      ¥{detailCast.monthlySales.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+                {detailCast.monthlyNominations != null && (
+                  <div className="bg-(--bg-gray) rounded-lg p-3">
+                    <p className="text-xs text-(--text-sub) mb-0.5">月間指名数</p>
+                    <p className="text-sm font-medium text-(--text-main)">
+                      {detailCast.monthlyNominations}本
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* お酒の強さ */}
+              {detailCast.alcoholTolerance && (
+                <div className="flex items-center gap-2">
+                  <Wine className="w-4 h-4 text-(--text-sub)" />
+                  <span className="text-sm text-(--text-sub)">お酒:</span>
+                  <span className="text-sm text-(--text-main) font-medium">
+                    {ALCOHOL_LABELS[detailCast.alcoholTolerance] ?? detailCast.alcoholTolerance}
+                  </span>
+                </div>
+              )}
+
+              {/* 希望エリア */}
+              {detailCast.desiredAreas.length > 0 && (
+                <div>
+                  <p className="text-xs text-(--text-sub) mb-1.5">希望エリア</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {detailCast.desiredAreas.map((area) => (
+                      <span
+                        key={area}
+                        className="px-2.5 py-1 bg-(--primary-bg) text-(--primary) text-xs rounded font-medium"
+                      >
+                        {area}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 自己紹介 */}
+              {detailCast.description && (
+                <div>
+                  <p className="text-xs text-(--text-sub) mb-1.5">自己紹介</p>
+                  <p className="text-sm text-(--text-main) leading-relaxed">
+                    {detailCast.description}
+                  </p>
+                </div>
+              )}
+
+              {/* アクション */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setDetailCast(null)}
+                  className="flex-1"
+                >
+                  閉じる
+                </Button>
+                <Button
+                  onClick={() => {
+                    setDetailCast(null);
+                    setSelectedCast(detailCast.id);
+                  }}
+                  className="flex-1"
+                >
+                  オファーを送る
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* オファーモーダル */}
       {selectedCast && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-(--text-main) mb-4">
               オファーを送信
             </h3>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-(--text-main) mb-1">
                 メッセージ <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -315,9 +382,9 @@ export default function CastsSearchPage() {
                 onChange={(e) => setOfferMessage(e.target.value)}
                 placeholder="キャストへのメッセージを入力してください"
                 rows={5}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--primary) resize-none"
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-(--text-sub) mt-1">
                 店舗の魅力や希望条件などを伝えましょう
               </p>
             </div>

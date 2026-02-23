@@ -27,7 +27,7 @@ export default function StoreLoginPage() {
           <button
             type="button"
             onClick={handleStoreLogin}
-            className="w-full flex items-center justify-center gap-3 px-4 py-4 border border-transparent text-lg font-medium rounded-lg text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            className="w-full flex items-center justify-center gap-3 px-4 py-4 border border-transparent text-lg font-medium rounded-lg text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-colors"
           >
             <svg
               className="w-6 h-6"
@@ -46,13 +46,24 @@ export default function StoreLoginPage() {
           </button>
         </div>
 
-        <div className="text-center">
-          <Link
-            href="/"
-            className="text-sm text-blue-600 hover:text-blue-700"
-          >
-            トップページに戻る
-          </Link>
+        <div className="text-center space-y-2">
+          <div>
+            <span className="text-sm text-gray-600">アカウントをお持ちでない方は</span>{" "}
+            <Link
+              href="/store/register"
+              className="text-sm text-(--primary) hover:text-pink-700 font-medium"
+            >
+              新規登録
+            </Link>
+          </div>
+          <div>
+            <Link
+              href="/"
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              トップページに戻る
+            </Link>
+          </div>
         </div>
       </div>
     </div>

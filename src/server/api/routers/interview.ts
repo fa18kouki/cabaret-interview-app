@@ -185,6 +185,51 @@ export const interviewRouter = createTRPCRouter({
     }),
 
   /**
+   * 面接完了
+   */
+  complete: protectedProcedure
+    .input(
+      z.object({
+        interviewId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = await ctx.prisma.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { store: { select: { id: true } } },
+      });
+
+      const storeId = user?.store?.id;
+
+      if (!storeId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "店舗のみ面接を完了にできます",
+        });
+      }
+
+      const interview = await ctx.prisma.interview.findFirst({
+        where: {
+          id: input.interviewId,
+          storeId,
+          status: "SCHEDULED",
+        },
+      });
+
+      if (!interview) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "面接が見つかりません",
+        });
+      }
+
+      return ctx.prisma.interview.update({
+        where: { id: input.interviewId },
+        data: { status: "COMPLETED" },
+      });
+    }),
+
+  /**
    * 無断欠席報告
    */
   reportNoShow: protectedProcedure
