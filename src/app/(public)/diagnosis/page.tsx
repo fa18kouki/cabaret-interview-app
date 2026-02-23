@@ -250,9 +250,17 @@ export default function DiagnosisPage() {
           <Link href="/" className="text-white font-bold text-lg">
             LUMINA
           </Link>
-          <span className="text-xs text-gray-400 bg-gray-800 px-3 py-1 rounded-full">
-            登録不要・30秒で診断
-          </span>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              ログイン済みの方はこちら
+            </Link>
+            <span className="text-xs text-gray-400 bg-gray-800 px-3 py-1 rounded-full">
+              登録不要・30秒で診断
+            </span>
+          </div>
         </div>
       </header>
 
