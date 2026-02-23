@@ -3,9 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "@/lib/theme-provider";
+import { useDemoSession } from "@/lib/demo-session";
 
 export function Hero() {
   const { isDark } = useTheme();
+  const { session } = useDemoSession();
 
   return (
     <section
@@ -50,6 +52,44 @@ export function Hero() {
             >
               LUMINA
             </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {session ? (
+              <Link
+                href={session.user.role === "STORE" ? "/store/dashboard" : "/dashboard"}
+                className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
+                  isDark
+                    ? "bg-white/10 text-white hover:bg-white/20"
+                    : "bg-pink-500 text-white hover:bg-pink-600"
+                }`}
+              >
+                {session.user.role === "STORE" ? "管理画面へ" : "マイページへ"}
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
+                    isDark
+                      ? "text-white hover:bg-white/10"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  ログイン
+                </Link>
+                <Link
+                  href="/store/login"
+                  className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
+                    isDark
+                      ? "text-gray-400 hover:text-white hover:bg-white/10"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  店舗の方
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>

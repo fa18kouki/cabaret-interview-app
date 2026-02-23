@@ -11,9 +11,9 @@ export function StoreLayoutWrapper({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isLoginPage = pathname === "/store/login";
+  const isAuthPage = pathname === "/store/login" || pathname === "/store/register";
 
-  if (isLoginPage) {
+  if (isAuthPage) {
     return <>{children}</>;
   }
 
