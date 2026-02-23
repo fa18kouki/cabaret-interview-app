@@ -250,12 +250,46 @@ model Store {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // リレーション
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  matches    Match[]
-  offers     Offer[]
-  interviews Interview[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches      Match[]
+  offers       Offer[]
+  interviews   Interview[]
+  subscription Subscription?
 
   @@map("stores")
+}
+
+// ==================== サブスクリプション ====================
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  INCOMPLETE
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  storeId              String             @unique @map("store_id")
+  stripeCustomerId     String?            @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?            @unique @map("stripe_subscription_id")
+  plan                 SubscriptionPlan   @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart   DateTime?          @map("current_period_start")
+  currentPeriodEnd     DateTime?          @map("current_period_end")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
 }
 
 // ==================== マッチング ====================

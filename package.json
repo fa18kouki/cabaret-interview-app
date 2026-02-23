@@ -14,7 +14,8 @@
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test"
   },
   "prisma": {
     "seed": "bun run prisma/seed.ts"
@@ -38,10 +39,12 @@
     "prisma": "^7.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "stripe": "^20.3.1",
     "superjson": "^2.2.6",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
